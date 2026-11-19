@@ -324,13 +324,25 @@ function drawDl(only) {
 
 function pHome() {
   const ng = Object.keys(S.games).length;
-  if (!ng) return `<div class="card">${emptyBox("Nenhum jogo cadastrado", "Cadastre seus jogos em Ajustes para começar.")}<div class="btnrow" style="justify-content:center"><a class="primary" href="#/cfg" style="text-decoration:none">Ir para Ajustes</a></div></div>`;
+  if (!ng) return `<div class="card">${emptyBox("Nenhum jogo cadastrado", "Cadastre os jogos da Lumbra Games para que eles possam começar a enviar dados.")}<div class="btnrow" style="justify-content:center"><button class="primary" id="seed">Cadastrar Prancheta e WILDFORGE</button><a class="ghost" href="#/cfg" style="text-decoration:none">Cadastrar outro</a></div></div>`;
   const al = computeAlerts().slice(0, 3);
   return kpiBlock(null) + chartsBlock(null) +
     `<p class="sec">Jogos</p>${gamesList()}` +
     (al.length ? `<p class="sec">Alertas recentes</p>${al.map(alertHtml).join("")}` : "");
 }
-pHome.after = () => chartsAfter(null);
+pHome.after = () => {
+  const b = $("#seed");
+  if (b) return b.onclick = async () => {
+    b.disabled = true;
+    const t = Date.now(), seed = {
+      PRANCHETA: { name: "Prancheta", color: "#3ddc84", status: "Lançado", downloads: "lumbragames/Prancheta|prancheta.apk", notes: "Eventos: carreira_nova, partida_inicio, partida_fim, clube_criado, saf_compra, tela", created: t, updated: t },
+      WILDFORGE: { name: "WILDFORGE", color: "#ff6a3d", status: "Em desenvolvimento", downloads: "", notes: "Eventos: cliques nos botões (ui)", created: t, updated: t }
+    };
+    try { await update(ref(db, "games"), seed); S.games = seed; await loadDownloads(); toast("Jogos cadastrados"); render(); }
+    catch (e) { b.disabled = false; toast("Erro ao cadastrar: " + e.message); }
+  };
+  chartsAfter(null);
+};
 
 function gamesList() {
   const now = serverNow();
