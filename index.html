@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lumbra Games · Estúdio brasileiro de jogos mobile</title>
+<meta name="description" content="Lumbra Games é um estúdio brasileiro independente de jogos para celular. Criadores de Prancheta e WILDFORGE.">
+<meta name="keywords" content="Lumbra Games, Lumbra, estúdio de jogos, jogos mobile, jogos Android, Prancheta, WILDFORGE, jogo brasileiro">
+<meta name="author" content="Lumbra Games">
+<link rel="canonical" href="https://lumbragames.github.io/">
+<meta name="theme-color" content="#07060b">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lumbra Games">
+<meta property="og:title" content="Lumbra Games · Estúdio brasileiro de jogos mobile">
+<meta property="og:description" content="Criadores de Prancheta e WILDFORGE.">
+<meta property="og:url" content="https://lumbragames.github.io/">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"Lumbra Games","alternateName":"Lumbra","url":"https://lumbragames.github.io/","logo":"https://lumbragames.github.io/logo.svg","description":"Estúdio brasileiro independente de jogos para celular.","foundingDate":"2026","areaServed":"BR",
+"makesOffer":[{"@type":"Offer","price":"0","priceCurrency":"BRL","itemOffered":{"@type":"VideoGame","name":"Prancheta","url":"https://lumbragames.github.io/Prancheta/","gamePlatform":"Android","genre":"Gerenciamento de futebol","author":{"@type":"Organization","name":"Lumbra Games"}}}]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07060b;--card:rgba(255,255,255,.04);--line:rgba(255,255,255,.09);--chalk:#f3f1f8;--muted:#9a95ab;--amber:#ffb347;--ember:#ff6a3d;--violet:#8b5cf6;
+--display:"Bebas Neue",Impact,"Arial Narrow",sans-serif;--body:Inter,system-ui,-apple-system,Roboto,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--bg);color:var(--chalk);line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+/* intro */
+#intro{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;transition:opacity .8s .1s,visibility .8s .1s}
+#intro.done{opacity:0;visibility:hidden}
+#intro svg{width:84px;height:84px}
+#intro .m{stroke-dasharray:300;stroke-dashoffset:300;animation:draw 1.2s .1s cubic-bezier(.6,0,.2,1) forwards}
+#intro .glow{opacity:0;animation:fadeIn .6s 1s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fadeIn{to{opacity:1}}
+
+/* fundo: brasas + luz */
+#embers{position:fixed;inset:0;z-index:0;pointer-events:none}
+.aura{position:fixed;left:50%;top:-20vh;width:140vw;height:90vh;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(255,140,60,.18),rgba(139,92,246,.08) 45%,transparent 70%);filter:blur(20px);z-index:0;pointer-events:none;animation:breathe 8s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.6;transform:translateX(-50%) scale(1.1)}}
+main,footer{position:relative;z-index:1}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;transition:.3s}
+nav.solid{background:rgba(7,6,11,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .b{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:22px;letter-spacing:.18em}
+nav .b svg{width:28px;height:28px}
+nav a.j{font-size:13px;font-weight:800;padding:8px 14px;border:1px solid var(--line);border-radius:99px;background:var(--card)}
+
+/* hero */
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:100px 20px 60px}
+.mark{width:120px;height:120px;margin-bottom:26px;filter:drop-shadow(0 0 30px rgba(255,140,60,.45));animation:float 5s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-10px)}}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(64px,20vw,150px);line-height:.85;letter-spacing:.06em;white-space:nowrap}
+.hero h1 span{display:inline-block;opacity:0;transform:translateY(40px);filter:blur(8px);animation:rise .8s cubic-bezier(.2,.9,.2,1) forwards}
+@keyframes rise{to{opacity:1;transform:none;filter:none}}
+.hero h1 .s{display:block;font-size:.36em;letter-spacing:.7em;margin-top:8px;margin-right:-.7em;background:linear-gradient(90deg,var(--amber),var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{max-width:420px;margin:22px auto 0;color:var(--muted);font-size:17px;opacity:0;animation:rise .8s 1.9s forwards}
+.hero .go{display:inline-flex;align-items:center;gap:10px;margin-top:30px;padding:16px 26px;border-radius:99px;font-weight:800;background:linear-gradient(135deg,var(--amber),var(--ember));color:#1b0d03;box-shadow:0 10px 40px rgba(255,106,61,.35);opacity:0;animation:rise .8s 2.1s forwards}
+.hero .go:active{transform:scale(.97)}
+
+/* seções */
+section{max-width:620px;margin:0 auto;padding:70px 20px}
+.label{font-size:12px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin-bottom:10px}
+h2{font-family:var(--display);font-weight:400;font-size:clamp(48px,13vw,74px);line-height:.92;margin-bottom:14px}
+h2 em{font-style:normal;color:var(--amber)}
+.sub{color:var(--muted);font-size:16px}
+.rv{opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;transform:none}
+
+/* jogos */
+.games{display:grid;gap:18px;margin-top:30px}
+.game{position:relative;display:block;border-radius:24px;overflow:hidden;border:1px solid var(--line);background:var(--card);transform-style:preserve-3d;transition:transform .25s}
+.art{position:relative;height:200px;overflow:hidden}
+.art svg{position:absolute;inset:0;width:100%;height:100%}
+.game .info{padding:18px 20px 20px}
+.game h3{font-family:var(--display);font-weight:400;font-size:42px;line-height:1;letter-spacing:.03em}
+.game p{color:var(--muted);font-size:15px;margin:6px 0 14px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:#d6d2e2}
+.badge{position:absolute;top:14px;right:14px;z-index:2;font-size:12px;font-weight:800;padding:6px 12px;border-radius:99px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.badge.on{background:rgba(61,220,132,.2);color:#5ef0a0;border:1px solid rgba(61,220,132,.4)}
+.badge.soon{background:rgba(255,255,255,.08);color:var(--chalk);border:1px solid var(--line)}
+.game .shine{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.12),transparent 50%);opacity:0;transition:opacity .3s}
+.game:hover .shine,.game.t .shine{opacity:1}
+.play{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-weight:800;font-size:15px;color:#5ef0a0}
+.play svg{transition:transform .2s}.game:hover .play svg{transform:translateX(4px)}
+
+/* arte animada dos jogos */
+.p-ball{animation:pass 3.2s ease-in-out infinite}
+@keyframes pass{0%{transform:translate(0,0)}33%{transform:translate(90px,-40px)}66%{transform:translate(170px,10px)}100%{transform:translate(0,0)}}
+.p-line{stroke-dasharray:6 6;animation:dash 1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-12}}
+.w-fire{transform-origin:50% 100%;animation:flick .25s ease-in-out infinite alternate}
+@keyframes flick{to{transform:scaleY(1.15) scaleX(.92)}}
+.w-spark{animation:spark 2.4s linear infinite}
+@keyframes spark{from{transform:translateY(0);opacity:1}to{transform:translateY(-110px);opacity:0}}
+.e-noise{animation:noise .18s steps(2) infinite}
+@keyframes noise{to{transform:translate(-6px,4px)}}
+.e-scan{animation:scan 3s linear infinite}
+@keyframes scan{from{transform:translateY(-20px)}to{transform:translateY(220px)}}
+.e-eye{animation:blink 4s infinite}
+@keyframes blink{0%,92%,100%{opacity:1}95%{opacity:0}}
+
+/* sobre */
+.about{display:grid;gap:12px;margin-top:28px}
+.ab{display:flex;gap:14px;padding:18px;border-radius:18px;border:1px solid var(--line);background:var(--card)}
+.ab i{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-style:normal;font-size:20px;background:rgba(255,179,71,.12)}
+.ab b{display:block}
+.ab small{color:var(--muted);font-size:14px}
+
+footer{text-align:center;padding:50px 20px 60px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+footer svg{width:40px;height:40px;margin-bottom:10px}
+footer .n{display:block;font-family:var(--display);font-size:28px;letter-spacing:.3em;color:var(--chalk);margin-bottom:4px}
+
+
+/* ---- extras ---- */
+#prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:60;background:linear-gradient(90deg,var(--amber),var(--ember),var(--violet));box-shadow:0 0 12px var(--ember)}
+.orbit{position:relative;width:170px;height:170px;display:grid;place-items:center;margin-bottom:10px}
+.orbit .mark{margin:0}
+.orbit::before,.orbit::after{content:"";position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(255,179,71,.35);animation:spin 18s linear infinite}
+.orbit::after{inset:18px;border:1px solid rgba(139,92,246,.25);animation-duration:11s;animation-direction:reverse}
+.orbit i{position:absolute;inset:0;animation:spin 6s linear infinite}
+.orbit i::before{content:"";position:absolute;top:-4px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--amber);box-shadow:0 0 14px var(--amber)}
+.orbit i:nth-child(2){animation-duration:9s;animation-direction:reverse}.orbit i:nth-child(2)::before{background:var(--violet);box-shadow:0 0 14px var(--violet);top:auto;bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rot{height:30px;overflow:hidden;margin-top:18px;font-weight:800;font-size:20px;opacity:0;animation:rise .8s 2.2s forwards}
+.rot div{animation:roll 9s cubic-bezier(.7,0,.3,1) infinite}
+.rot span{display:block;height:30px;line-height:30px;background:linear-gradient(90deg,var(--amber),var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes roll{0%,22%{transform:translateY(0)}25%,47%{transform:translateY(-30px)}50%,72%{transform:translateY(-60px)}75%,97%{transform:translateY(-90px)}100%{transform:translateY(-120px)}}
+.hero .go{animation:rise .8s 2.4s forwards,glowp 2.6s 3.2s ease-in-out infinite}
+@keyframes glowp{50%{box-shadow:0 10px 60px rgba(255,106,61,.65)}}
+.hero p{animation-delay:2.1s}
+
+.ticker{position:relative;z-index:1;overflow:hidden;white-space:nowrap;border-block:1px solid var(--line);background:rgba(255,255,255,.02);padding:14px 0;transform:rotate(-2deg) scale(1.05);margin:10px 0}
+.ticker div{display:inline-block;animation:marq 26s linear infinite}
+.ticker span{font-family:var(--display);font-size:26px;letter-spacing:.1em;margin:0 16px}
+.ticker span:nth-child(4n+1){color:var(--amber)}
+.ticker b{color:var(--ember);font-weight:400}
+@keyframes marq{to{transform:translateX(-50%)}}
+
+.game{animation:hover 6s ease-in-out infinite}
+.game:nth-child(2){animation-delay:-3s}
+@keyframes hover{50%{translate:0 -6px}}
+.game::before{content:"";position:absolute;inset:-1px;border-radius:24px;padding:1px;background:conic-gradient(from var(--a,0deg),transparent 0 70%,var(--amber) 80%,var(--ember) 88%,transparent 95%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:border 4s linear infinite;pointer-events:none;z-index:3}
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes border{to{--a:360deg}}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+.stat{position:relative;overflow:hidden;padding:22px 16px;border-radius:20px;border:1px solid var(--line);background:var(--card)}
+.stat b{display:block;font-family:var(--display);font-weight:400;font-size:clamp(40px,12vw,56px);line-height:1;background:linear-gradient(180deg,#fff,var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat small{color:var(--muted);font-size:13px}
+.stat::after{content:"";position:absolute;right:-30px;bottom:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,140,60,.25),transparent 70%);animation:breathe 4s ease-in-out infinite}
+
+.tl{position:relative;margin-top:30px;padding-left:36px}
+.tl::before{content:"";position:absolute;left:12px;top:0;bottom:0;width:2px;background:var(--line)}
+.tl .fill{position:absolute;left:12px;top:0;width:2px;height:0;background:linear-gradient(var(--amber),var(--ember),var(--violet));box-shadow:0 0 14px var(--ember)}
+.ev{position:relative;padding:16px 18px;margin-bottom:14px;border-radius:18px;border:1px solid var(--line);background:var(--card);opacity:0;transform:translateX(30px);transition:.7s cubic-bezier(.2,.8,.2,1)}
+.ev.in{opacity:1;transform:none}
+.ev::before{content:"";position:absolute;left:-30px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--amber);transition:.4s .3s}
+.ev.in::before{background:var(--amber);box-shadow:0 0 14px var(--amber)}
+.ev span{font-size:12px;font-weight:800;letter-spacing:.15em;color:var(--amber)}
+.ev b{display:block;font-size:17px;margin:2px 0}
+.ev small{color:var(--muted);font-size:14px}
+
+.ab i{animation:bounce 3s ease-in-out infinite}
+.ab:nth-child(2) i{animation-delay:-1s}.ab:nth-child(3) i{animation-delay:-2s}
+@keyframes bounce{50%{transform:translateY(-5px) rotate(-6deg)}}
+
+.faq{margin-top:26px;display:grid;gap:10px}
+.q{border-radius:18px;border:1px solid var(--line);background:var(--card);overflow:hidden;transition:border-color .3s}
+.q.open{border-color:rgba(255,179,71,.4)}
+.q button{all:unset;box-sizing:border-box;width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px;font-weight:800;font-size:16px;cursor:pointer}
+.q button i{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,179,71,.12);color:var(--amber);font-style:normal;font-size:20px;transition:transform .35s}
+.q.open button i{transform:rotate(45deg)}
+.q .a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s cubic-bezier(.2,.8,.2,1)}
+.q.open .a{grid-template-rows:1fr}
+.q .a p{overflow:hidden;color:var(--muted);font-size:15px;padding:0 18px}
+.q.open .a p{padding-bottom:18px}
+
+.cta{text-align:center;padding:90px 20px;position:relative;overflow:hidden}
+.cta .ring{position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px;border-radius:50%;border:1px solid rgba(255,179,71,.3);animation:ripple 4s linear infinite}
+.cta .ring:nth-child(2){animation-delay:-1.33s}.cta .ring:nth-child(3){animation-delay:-2.66s}
+@keyframes ripple{from{transform:scale(.3);opacity:1}to{transform:scale(1.8);opacity:0}}
+.cta h2,.cta a{position:relative}
+.cta a{display:inline-flex;margin-top:22px;padding:16px 26px;border-radius:99px;font-weight:800;background:linear-gradient(135deg,var(--amber),var(--ember));color:#1b0d03;box-shadow:0 10px 40px rgba(255,106,61,.35)}
+
+.tap{position:fixed;width:10px;height:10px;margin:-5px;border-radius:50%;pointer-events:none;z-index:95;background:var(--amber);animation:tap .6s ease-out forwards}
+@keyframes tap{to{transform:scale(7);opacity:0}}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div id="intro"><svg viewBox="0 0 100 100" fill="none"><defs><linearGradient id="lg0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6a3d"/></linearGradient></defs><path class="m" d="M30 18v52h40" stroke="url(#lg0)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><circle class="glow" cx="66" cy="34" r="9" fill="url(#lg0)"/></svg></div>
+
+<div id="prog"></div>
+<div class="aura"></div>
+<canvas id="embers"></canvas>
+
+<nav id="nav">
+  <a class="b" href="#"><svg viewBox="0 0 100 100" fill="none"><use href="#logo"/></svg>LUMBRA</a>
+  <a class="j" href="#jogos">Jogos</a>
+</nav>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6a3d"/></linearGradient>
+  <g id="logo"><path d="M30 18v52h40" stroke="url(#lg)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="66" cy="34" r="9" fill="url(#lg)"/></g>
+</defs></svg>
+
+<main>
+<header class="hero">
+  <div class="orbit"><i></i><i></i><svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><use href="#logo"/></svg></div>
+  <h1 id="h1" aria-label="Lumbra Games"></h1>
+  <div class="rot" aria-hidden="true"><div><span>Futebol</span><span>Sobrevivência</span><span>Estratégia</span><span>Aventura</span><span>Futebol</span></div></div>
+  <p>Estúdio brasileiro independente de jogos para celular. Feitos no Brasil, com capricho, pra jogar em qualquer lugar.</p>
+  <a class="go" href="#jogos">Conheça nossos jogos
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
+</header>
+
+<div class="ticker" aria-hidden="true"><div id="tick"></div></div>
+
+<section id="jogos">
+  <div class="rv">
+    <p class="label">Nossos jogos</p>
+    <h2>Mundos feitos<br>pra <em>caber no bolso.</em></h2>
+  </div>
+
+  <div class="games">
+    <!-- PRANCHETA -->
+    <a class="game rv" href="Prancheta/">
+      <span class="badge on">Disponível</span>
+      <div class="art">
+        <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect width="400" height="200" fill="#0d3b22"/>
+          <g fill="#0f4a2a"><rect x="0" width="40" height="200"/><rect x="80" width="40" height="200"/><rect x="160" width="40" height="200"/><rect x="240" width="40" height="200"/><rect x="320" width="40" height="200"/></g>
+          <g fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><rect x="14" y="14" width="372" height="172"/><line x1="200" y1="14" x2="200" y2="186"/><circle cx="200" cy="100" r="34"/></g>
+          <path class="p-line" d="M90 120 L180 80 L260 130" stroke="#f3f1f8" stroke-width="2.5" fill="none"/>
+          <g fill="#3ddc84" stroke="#fff" stroke-width="2"><circle cx="90" cy="120" r="8"/><circle cx="180" cy="80" r="8"/><circle cx="260" cy="130" r="8"/><circle cx="130" cy="60" r="8"/><circle cx="310" cy="70" r="8"/></g>
+          <circle class="p-ball" cx="90" cy="120" r="5" fill="#fff"/>
+          <rect width="400" height="200" fill="url(#fadeG)"/>
+          <defs><linearGradient id="fadeG" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="#07060b" stop-opacity="0"/><stop offset="1" stop-color="#07060b" stop-opacity=".85"/></linearGradient></defs>
+        </svg>
+      </div>
+      <div class="info">
+        <h3>Prancheta</h3>
+        <p>Jogo de treinador de futebol. Comece no sub-20, monte o elenco, negocie e chegue ao topo.</p>
+        <div class="tags"><span>Futebol</span><span>Gerenciamento</span><span>Android</span></div>
+        <span class="play">Baixar grátis <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div>
+      <i class="shine"></i>
+    </a>
+
+    <!-- WILDFORGE -->
+    <div class="game rv">
+      <span class="badge soon">Em breve</span>
+      <div class="art">
+        <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1030"/><stop offset="1" stop-color="#4a1f1a"/></linearGradient>
+          <radialGradient id="fireG"><stop offset="0" stop-color="#ffe08a"/><stop offset=".5" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ff3d1f" stop-opacity="0"/></radialGradient></defs>
+          <rect width="400" height="200" fill="url(#sky)"/>
+          <circle cx="320" cy="45" r="18" fill="#f3e9c8" opacity=".85"/>
+          <path d="M0 150 L60 90 L110 130 L170 70 L230 125 L290 85 L350 120 L400 95 V200 H0Z" fill="#1c1424"/>
+          <path d="M0 175 L50 150 L80 160 L80 140 L95 130 L110 140 L110 165 L170 155 L240 170 L300 150 L400 165 V200 H0Z" fill="#0e0a12"/>
+          <g fill="#0e0a12"><path d="M300 165 l12 -40 l12 40z"/><path d="M325 168 l10 -32 l10 32z"/><path d="M40 172 l12 -38 l12 38z"/></g>
+          <circle cx="200" cy="168" r="40" fill="url(#fireG)" opacity=".6"/>
+          <g class="w-fire"><path d="M200 175 C188 160 194 148 200 135 C206 148 214 160 200 175Z" fill="#ff8a3d"/><path d="M200 175 C194 166 197 158 200 150 C204 158 207 166 200 175Z" fill="#ffe08a"/></g>
+          <g fill="#ffb347"><circle class="w-spark" cx="196" cy="150" r="1.6"/><circle class="w-spark" cx="205" cy="148" r="1.3" style="animation-delay:-.8s"/><circle class="w-spark" cx="200" cy="152" r="1.2" style="animation-delay:-1.6s"/></g>
+          <rect width="400" height="200" fill="url(#fadeG)"/>
+        </svg>
+      </div>
+      <div class="info">
+        <h3>WILDFORGE</h3>
+        <p>Sobrevivência medieval em mundo aberto. Explore biomas, colete, construa e resista.</p>
+        <div class="tags"><span>Sobrevivência</span><span>Medieval</span><span>Mundo aberto</span></div>
+      </div>
+      <i class="shine"></i>
+    </div>
+  </div>
+</section>
+
+
+<section>
+  <div class="rv">
+    <p class="label">Em números</p>
+    <h2>Começando <em>com tudo.</em></h2>
+  </div>
+  <div class="stats">
+    <div class="stat rv"><b data-n="2">0</b><small>jogos em desenvolvimento</small></div>
+    <div class="stat rv"><b data-n="28" data-s="+">0</b><small>versões lançadas</small></div>
+    <div class="stat rv"><b data-n="100" data-s="%">0</b><small>feito pra celular</small></div>
+    <div class="stat rv"><b data-n="0" data-p="R$ ">0</b><small>pra baixar e jogar</small></div>
+  </div>
+</section>
+
+<section>
+  <div class="rv">
+    <p class="label">Nossa história</p>
+    <h2>Do zero ao<br><em>primeiro lançamento.</em></h2>
+  </div>
+  <div class="tl" id="tl"><div class="fill" id="tlf"></div>
+    <div class="ev"><span>O COMEÇO</span><b>A primeira faísca</b><small>Nasce o WILDFORGE: um mundo medieval de sobrevivência, criado do zero, direto no celular.</small></div>
+    <div class="ev"><span>EVOLUÇÃO</span><b>De pixel art a 3D</b><small>O WILDFORGE cresce versão após versão e ganha mundo aberto com biomas e visual 3D.</small></div>
+    <div class="ev"><span>NOVO JOGO</span><b>Nasce o Prancheta</b><small>Um jogo de treinador de futebol: carreira desde o sub-20, mercado, táticas e partida ao vivo.</small></div>
+    <div class="ev"><span>2026</span><b>Nasce a Lumbra Games</b><small>Os jogos ganham uma casa própria. O Prancheta é o primeiro lançamento oficial do estúdio.</small></div>
+    <div class="ev"><span>PRÓXIMO CAPÍTULO</span><b>Muito mais por vir</b><small>Novas versões, novos recursos e o WILDFORGE chegando à Lumbra Games.</small></div>
+  </div>
+</section>
+
+<section>
+  <div class="rv">
+    <p class="label">O estúdio</p>
+    <h2>Pequeno no tamanho.<br><em>Grande na ambição.</em></h2>
+    <p class="sub">A Lumbra Games nasceu da vontade de fazer jogos brasileiros com cara de jogo grande, pensados do começo ao fim pra tela do celular.</p>
+  </div>
+  <div class="about">
+    <div class="ab rv"><i>📱</i><div><b>Feito pro celular</b><small>Controles, telas e desempenho pensados pra jogar no toque.</small></div></div>
+    <div class="ab rv"><i>🇧🇷</i><div><b>Feito no Brasil</b><small>Jogos em português, com o nosso jeito de jogar.</small></div></div>
+    <div class="ab rv"><i>🔥</i><div><b>Atualizações constantes</b><small>Os jogos crescem com novas versões. Instale por cima e continue de onde parou.</small></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="rv">
+    <p class="label">Dúvidas</p>
+    <h2>Perguntas <em>frequentes.</em></h2>
+  </div>
+  <div class="faq">
+    <div class="q rv"><button>Os jogos são grátis?<i>+</i></button><div class="a"><p>Sim. Você baixa e joga sem pagar nada.</p></div></div>
+    <div class="q rv"><button>Em quais celulares funciona?<i>+</i></button><div class="a"><p>Os jogos são feitos para Android. A instalação é pelo arquivo APK, direto do nosso site.</p></div></div>
+    <div class="q rv"><button>Por que o celular pede permissão pra instalar?<i>+</i></button><div class="a"><p>Como o jogo não vem da Play Store, o Android pede que você permita "instalar apps desconhecidos". É só liberar uma vez para o navegador.</p></div></div>
+    <div class="q rv"><button>Como atualizo para a versão nova?<i>+</i></button><div class="a"><p>Baixe a versão nova e instale por cima da antiga. Seu progresso continua salvo.</p></div></div>
+  </div>
+</section>
+
+<div class="cta">
+  <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+  <h2 class="rv">Pronto pra<br><em>entrar em campo?</em></h2>
+  <a class="rv" href="Prancheta/">Baixar o Prancheta</a>
+</div>
+</main>
+
+<footer>
+  <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#logo"/></svg>
+  <span class="n">LUMBRA GAMES</span>
+  Estúdio brasileiro de jogos mobile · © 2026
+</footer>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const end=()=>$('#intro').classList.add('done');
+addEventListener('load',()=>setTimeout(end,reduce?0:1500));setTimeout(end,2800);
+
+const h=$('#h1');
+'LUMBRA'.split('').forEach((c,i)=>{const s=document.createElement('span');s.textContent=c;s.style.animationDelay=(1.5+i*.07)+'s';h.appendChild(s)});
+const g=document.createElement('span');g.className='s';g.textContent='GAMES';g.style.animationDelay='2s';h.appendChild(g);
+
+const nav=$('#nav');addEventListener('scroll',()=>nav.classList.toggle('solid',scrollY>40),{passive:true});
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.15});
+$$('.rv').forEach(e=>{const sib=[...e.parentNode.children].filter(x=>x.classList.contains('rv'));e.style.transitionDelay=(sib.indexOf(e)*.1)+'s';io.observe(e)});
+
+$$('.game').forEach(c=>{
+  const mv=(x,y)=>{const r=c.getBoundingClientRect(),px=(x-r.left)/r.width,py=(y-r.top)/r.height;c.style.setProperty('--mx',px*100+'%');c.style.setProperty('--my',py*100+'%');c.style.transform=`perspective(900px) rotateX(${(py-.5)*-7}deg) rotateY(${(px-.5)*7}deg)`};
+  c.addEventListener('pointermove',e=>mv(e.clientX,e.clientY));
+  c.addEventListener('touchstart',e=>{c.classList.add('t');mv(e.touches[0].clientX,e.touches[0].clientY)},{passive:true});
+  const out=()=>{c.classList.remove('t');c.style.transform=''};c.addEventListener('pointerleave',out);c.addEventListener('touchend',out);
+});
+
+
+/* extras */
+const prog=$('#prog');addEventListener('scroll',()=>{const h=document.documentElement;prog.style.width=(scrollY/(h.scrollHeight-innerHeight)*100)+'%'},{passive:true});
+const tw=['PRANCHETA','WILDFORGE','FEITO NO BRASIL','JOGOS MOBILE','LUMBRA GAMES','ANDROID','SOBREVIVÊNCIA','FUTEBOL'];
+const row=tw.map(w=>`<span>${w}</span><b>✦</b>`).join('');$('#tick').innerHTML=row+row;
+const io2=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;io2.unobserve(e.target);const b=e.target.querySelector('b[data-n]');if(!b)return;const n=+b.dataset.n,sx=b.dataset.s||'',px=b.dataset.p||'';const t0=performance.now();const f=t=>{const k=Math.min((t-t0)/1500,1);b.textContent=px+Math.round(n*(1-Math.pow(1-k,3)))+sx;if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}),{threshold:.4});
+$$('.stat').forEach(e=>io2.observe(e));
+const evs=$$('.ev'),io3=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io3.unobserve(e.target)}}),{threshold:.5});evs.forEach(e=>io3.observe(e));
+const tl=$('#tl'),tlf=$('#tlf');addEventListener('scroll',()=>{const r=tl.getBoundingClientRect();const k=Math.max(0,Math.min(1,(innerHeight*.7-r.top)/r.height));tlf.style.height=(k*100)+'%'},{passive:true});
+$$('.q button').forEach(b=>b.addEventListener('click',()=>{const q=b.parentNode,o=q.classList.contains('open');$$('.q').forEach(x=>x.classList.remove('open'));if(!o)q.classList.add('open')}));
+if(!reduce)addEventListener('pointerdown',e=>{const d=document.createElement('i');d.className='tap';d.style.left=e.clientX+'px';d.style.top=e.clientY+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),650)});
+const mk2=$('.orbit');if(!reduce)addEventListener('scroll',()=>{if(scrollY<innerHeight)mk2.style.transform=`translateY(${scrollY*.35}px) scale(${1-scrollY/innerHeight*.3})`;},{passive:true});
+
+/* brasas subindo */
+const cv=$('#embers'),cx=cv.getContext('2d');let W,H,P=[];
+const fit=()=>{W=innerWidth;H=innerHeight;cv.width=W*devicePixelRatio;cv.height=H*devicePixelRatio;cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)};fit();addEventListener('resize',fit);
+const N=reduce?0:Math.min(60,Math.round(innerWidth/7));
+const mk=(y)=>({x:Math.random()*W,y:y??H+10,r:Math.random()*1.8+.4,vy:Math.random()*.6+.25,vx:(Math.random()-.5)*.3,a:Math.random()*.6+.3,w:Math.random()*Math.PI*2,c:Math.random()<.8?'255,160,70':'170,130,255'});
+for(let i=0;i<N;i++)P.push(mk(Math.random()*H));
+(function loop(){cx.clearRect(0,0,W,H);for(const p of P){p.y-=p.vy;p.w+=.02;p.x+=p.vx+Math.sin(p.w)*.3;if(p.y<-10)Object.assign(p,mk());const f=Math.min(1,p.y/H*1.4);cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fillStyle=`rgba(${p.c},${p.a*f})`;cx.shadowBlur=8;cx.shadowColor=`rgba(${p.c},.8)`;cx.fill()}if(N)requestAnimationFrame(loop)})();
+})();
+</script>
+</body>
+</html>
