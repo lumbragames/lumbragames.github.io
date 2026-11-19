@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Lumbra Control</title>
+<meta name="theme-color" content="#07060b">
+<link rel="icon" href="../logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="control.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff6a3d"/></linearGradient>
+  <g id="logo"><path d="M30 18v52h40" stroke="url(#lg)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="66" cy="34" r="9" fill="url(#lg)"/></g>
+</defs></svg>
+
+<!-- carregando -->
+<div id="boot" class="center"><svg class="spinlogo" viewBox="0 0 100 100"><use href="#logo"/></svg><p id="bootMsg">Carregando…</p></div>
+
+<!-- login -->
+<div id="login" class="center hide">
+  <form id="loginForm" class="loginbox">
+    <svg viewBox="0 0 100 100" class="lmark"><use href="#logo"/></svg>
+    <h1>LUMBRA <span>CONTROL</span></h1>
+    <p class="muted">Área restrita da Lumbra Games</p>
+    <label>E-mail<input type="email" id="email" autocomplete="username" required></label>
+    <label>Senha<input type="password" id="pass" autocomplete="current-password" required></label>
+    <button type="submit" class="primary" id="loginBtn">Entrar</button>
+    <p class="err" id="loginErr"></p>
+  </form>
+</div>
+
+<!-- sem permissão -->
+<div id="noperm" class="center hide">
+  <div class="loginbox">
+    <svg viewBox="0 0 100 100" class="lmark"><use href="#logo"/></svg>
+    <h1>QUASE <span>LÁ</span></h1>
+    <p class="muted">Você entrou, mas esta conta ainda não foi liberada como administradora nas regras de segurança.</p>
+    <p class="muted">Seu código de administrador (UID):</p>
+    <code id="myUid" class="uid"></code>
+    <button class="primary" id="copyUid">Copiar código</button>
+    <button class="ghost" id="logout2">Sair</button>
+  </div>
+</div>
+
+<!-- não configurado -->
+<div id="nocfg" class="center hide">
+  <div class="loginbox">
+    <svg viewBox="0 0 100 100" class="lmark"><use href="#logo"/></svg>
+    <h1>LUMBRA <span>CONTROL</span></h1>
+    <p class="muted">O Firebase ainda não foi configurado. Assim que a configuração do projeto for adicionada, o painel é ativado.</p>
+  </div>
+</div>
+
+<!-- app -->
+<div id="app" class="hide">
+  <aside id="side">
+    <div class="brand"><svg viewBox="0 0 100 100"><use href="#logo"/></svg><div>LUMBRA<small>CONTROL</small></div></div>
+    <nav id="nav"></nav>
+    <div class="sidefoot"><span id="syncInfo" class="muted">—</span><button class="ghost sm" id="logout">Sair</button></div>
+  </aside>
+  <main>
+    <header class="top">
+      <div><p class="crumb" id="crumb">Visão geral</p><h2 id="title">Visão geral</h2></div>
+      <div class="topr">
+        <div class="seg" id="period">
+          <button data-p="1">24h</button><button data-p="7">7d</button><button data-p="30" class="on">30d</button><button data-p="90">90d</button><button data-p="all">Tudo</button>
+        </div>
+        <button class="icon" id="refresh" title="Atualizar"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.3-5.6M20 4v5h-5"/></svg></button>
+      </div>
+    </header>
+    <div id="view"></div>
+  </main>
+  <nav id="tabbar"></nav>
+</div>
+
+<div id="toast"></div>
+<div id="modal" class="hide"><div class="mbox" id="mbox"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

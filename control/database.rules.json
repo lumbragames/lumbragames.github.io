@@ -1,0 +1,99 @@
+{
+  "rules": {
+    ".read": "auth != null && auth.uid === 'ADMIN_UID'",
+    ".write": false,
+
+    "games": {
+      ".write": "auth != null && auth.uid === 'ADMIN_UID'"
+    },
+    "admin": {
+      ".write": "auth != null && auth.uid === 'ADMIN_UID'"
+    },
+
+    "players": {
+      "$g": {
+        "$u": {
+          ".write": "auth != null && auth.uid === $u && auth.provider === 'anonymous' && root.child('games').child($g).exists()",
+          ".validate": "newData.hasChildren(['last'])",
+          "first":    { ".validate": "newData.isNumber() && (!data.exists() || data.val() === newData.val())" },
+          "last":     { ".validate": "newData.isNumber() && newData.val() <= now" },
+          "sessions": { ".validate": "newData.isNumber() && newData.val() <= (data.exists() ? data.val() : 0) + 1" },
+          "secs":     { ".validate": "newData.isNumber() && newData.val() <= (data.exists() ? data.val() : 0) + 120" },
+          "ver":   { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "os":    { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "osv":   { ".validate": "newData.isString() && newData.val().length <= 10" },
+          "model": { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "plat":  { ".validate": "newData.isString() && newData.val().length <= 10" },
+          "lang":  { ".validate": "newData.isString() && newData.val().length <= 10" },
+          "tz":    { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "scr":   { ".validate": "newData.isString() && newData.val().length <= 12" },
+          "sdk":   { ".validate": "newData.isString() && newData.val().length <= 10" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+
+    "sessions": {
+      "$g": {
+        ".indexOn": ["s", "l"],
+        "$s": {
+          ".write": "auth != null && auth.provider === 'anonymous' && root.child('games').child($g).exists() && (data.exists() ? data.child('u').val() === auth.uid : newData.child('u').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['u', 's', 'l', 'd'])",
+          "u": { ".validate": "newData.val() === auth.uid" },
+          "s": { ".validate": "newData.isNumber() && (!data.exists() || data.val() === newData.val())" },
+          "l": { ".validate": "newData.isNumber() && newData.val() <= now" },
+          "d": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 86400" },
+          "v": { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "n": { ".validate": "newData.isNumber() && (!data.exists() || data.val() === newData.val())" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+
+    "online": {
+      "$g": {
+        "$u": {
+          ".write": "auth != null && auth.uid === $u && auth.provider === 'anonymous' && root.child('games').child($g).exists()",
+          ".validate": "newData.hasChildren(['sid', 'l'])",
+          "sid": { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "l":   { ".validate": "newData.isNumber() && newData.val() <= now" },
+          "v":   { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+
+    "events": {
+      "$g": {
+        ".indexOn": ["t"],
+        "$e": {
+          ".write": "auth != null && auth.provider === 'anonymous' && !data.exists() && root.child('games').child($g).exists()",
+          ".validate": "newData.hasChildren(['u', 's', 'n', 't'])",
+          "u":  { ".validate": "newData.val() === auth.uid" },
+          "s":  { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "n":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "t":  { ".validate": "newData.isNumber() && newData.val() <= now" },
+          "ct": { ".validate": "newData.isNumber()" },
+          "p":  { "$k": { ".validate": "(newData.isString() && newData.val().length <= 60) || newData.isNumber()" } },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+
+    "diag": {
+      "$g": {
+        ".indexOn": ["t"],
+        "$e": {
+          ".write": "auth != null && auth.provider === 'anonymous' && !data.exists() && root.child('games').child($g).exists()",
+          ".validate": "newData.hasChildren(['u', 'w', 'm', 't'])",
+          "u":  { ".validate": "newData.val() === auth.uid" },
+          "w":  { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "m":  { ".validate": "newData.isString() && newData.val().length <= 160" },
+          "t":  { ".validate": "newData.isNumber() && newData.val() <= now" },
+          "ct": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    }
+  }
+}

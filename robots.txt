@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
+Disallow: /control/
 Sitemap: https://lumbragames.github.io/sitemap.xml
