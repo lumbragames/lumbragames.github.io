@@ -179,7 +179,7 @@
     var h = document.createElement("h4"); h.textContent = title || "";
     var p = document.createElement("p"); p.textContent = text || "";
     var row = document.createElement("div"); row.className = "lbx-b";
-    function close(cb) { boxOpen = false; try { bg.remove(); } catch (e) {} if (cb) cb(); }
+    function close(cb) { boxOpen = false; try { bg.remove(); } catch (e) {} if (cb) cb(); setTimeout(applyRemote, 600); }
     if (noLabel) { var n = document.createElement("button"); n.className = "lbx-no"; n.textContent = noLabel; n.onclick = function () { close(onClose); }; row.appendChild(n); }
     var o = document.createElement("button"); o.className = "lbx-ok"; o.textContent = okLabel || "OK"; o.onclick = function () { close(onOk); }; row.appendChild(o);
     b.appendChild(top); if (title) b.appendChild(h); if (text) b.appendChild(p); b.appendChild(row); bg.appendChild(b);
