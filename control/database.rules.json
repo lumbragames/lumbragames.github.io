@@ -9,6 +9,10 @@
     "admin": {
       ".write": "auth != null && auth.uid === 'ADMIN_UID'"
     },
+    "remote": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'ADMIN_UID'"
+    },
 
     "players": {
       "$g": {
@@ -65,7 +69,7 @@
 
     "events": {
       "$g": {
-        ".indexOn": ["t"],
+        ".indexOn": ["t", "u"],
         "$e": {
           ".write": "auth != null && auth.provider === 'anonymous' && !data.exists() && root.child('games').child($g).exists()",
           ".validate": "newData.hasChildren(['u', 's', 'n', 't'])",

@@ -1,7 +1,7 @@
 // Lumbra Control — painel administrativo da Lumbra Games
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, get, set, update, remove, onValue, query, orderByChild, startAt, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, get, set, update, remove, onValue, query, orderByChild, startAt, limitToLast, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -30,16 +30,18 @@ const ICONS = {
   ret: '<path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5M12 7v5l3 2"/>',
   aud: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/>',
   rep: '<path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h8M9 17h6"/>',
+  ctrl: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  players: '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0114 0M16 4a4 4 0 010 8M22 21a7 7 0 00-4-6.3"/>',
   alert: '<path d="M18 16V11a6 6 0 10-12 0v5l-2 2h16zM10 20a2 2 0 004 0"/>',
   cfg: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-2.7 1.1V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-2.7-1.1l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.6 1.6 0 003 15H3a2 2 0 110-4h.1a1.6 1.6 0 001.1-2.7l-.1-.1a2 2 0 112.8-2.8l.1.1A1.6 1.6 0 009 4.6V4a2 2 0 114 0v.1a1.6 1.6 0 002.7 1.1l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 001.1 2.7H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/>'
 };
 const PAGES = [
-  ["home", "Visão geral", "home"], ["games", "Jogos", "games"], ["live", "Ao vivo", "live"], ["ret", "Retenção", "ret"],
+  ["home", "Visão geral", "home"], ["games", "Jogos", "games"], ["live", "Ao vivo", "live"], ["ctrl", "Controle", "ctrl"], ["players", "Jogadores", "players"], ["ret", "Retenção", "ret"],
   ["aud", "Público", "aud"], ["rep", "Relatórios", "rep"], ["alert", "Alertas", "alert"], ["cfg", "Ajustes", "cfg"]
 ];
 
 // ---------------- estado ----------------
-const S = { period: "30", page: "home", gameId: null, games: {}, players: {}, sessions: {}, online: {}, diag: {}, dl: {}, dlSnap: {}, events: {},
+const S = { period: "30", page: "home", gameId: null, games: {}, remote: {}, rlog: {}, pf: { g: "", q: "", sort: "last" }, players: {}, sessions: {}, online: {}, diag: {}, dl: {}, dlSnap: {}, events: {},
   offset: 0, loadedAt: 0, ghError: null, charts: [] };
 let app, auth, db, user;
 
@@ -94,8 +96,8 @@ function route() {
 // ---------------- dados ----------------
 async function loadAll() {
   const safe = p => get(ref(db, p)).then(s => s.val() || {}).catch(e => { console.warn(p, e); return {}; });
-  const [games, players, online, dlSnap] = await Promise.all([safe("games"), safe("players"), safe("online"), safe("admin/dl")]);
-  S.games = games; S.players = players; S.online = online; S.dlSnap = dlSnap;
+  const [games, players, online, dlSnap, remote, rlog] = await Promise.all([safe("games"), safe("players"), safe("online"), safe("admin/dl"), safe("remote"), safe("admin/rlog")]);
+  S.games = games; S.players = players; S.online = online; S.dlSnap = dlSnap; S.remote = remote; S.rlog = rlog;
   S.sessions = {}; S.diag = {};
   await Promise.all(Object.keys(games).map(async g => {
     S.sessions[g] = await get(ref(db, "sessions/" + g)).then(s => s.val() || {}).catch(() => ({}));
@@ -260,11 +262,11 @@ const HELP = {
 function render() {
   if (!user) return;
   killCharts();
-  const P = { home: pHome, games: S.gameId ? pGame : pGames, live: pLive, ret: pRet, aud: pAud, rep: pRep, alert: pAlert, cfg: pCfg }[S.page];
+  const P = { home: pHome, games: S.gameId ? pGame : pGames, live: pLive, ctrl: pCtrl, players: pPlayers, ret: pRet, aud: pAud, rep: pRep, alert: pAlert, cfg: pCfg }[S.page];
   const name = PAGES.find(p => p[0] === S.page)[1];
   $("#crumb").textContent = S.gameId ? "Jogos" : "Lumbra Control";
   $("#title").textContent = S.gameId ? (S.games[S.gameId]?.name || S.gameId) : name;
-  $("#period").style.visibility = ["live", "cfg", "alert"].includes(S.page) ? "hidden" : "visible";
+  $("#period").style.visibility = ["live", "cfg", "alert", "ctrl"].includes(S.page) ? "hidden" : "visible";
   $("#view").innerHTML = P();
   (P.after || (() => {}))();
   const al = computeAlerts().filter(a => a.level === "bad" || a.level === "warn").length;
@@ -378,19 +380,30 @@ function pGame() {
       <tr><td>Erros de envio registrados</td><td class="n">${diagN}</td></tr>
       <tr><td>Fonte de downloads</td><td class="n">${S.dl[g] != null ? "GitHub" : "Não cadastrada"}</td></tr></table></div>
   </div>
+  <p class="sec">Versões</p>
+  <div class="card"><h3><b>O que cada versão está fazendo</b><span class="muted">${pname()}</span></h3>${versionTable(g)}</div>
+  <p class="sec">Comportamento</p>
   <div class="grid2">
-    <div class="card"><h3><b>Versões em uso</b><span class="muted">${pname()}</span></h3>${barsHtml(versions, "sessões")}</div>
+    <div class="card"><h3><b>Horários de pico</b>${conn ? TAG.real : TAG.off}</h3><div class="chart sm">${conn ? '<canvas id="cHour"></canvas>' : emptyBox("Sem dados ainda")}</div>${conn ? peakNote(g) : ""}</div>
+    <div class="card"><h3><b>Dias da semana</b>${conn ? TAG.real : TAG.off}</h3><div class="chart sm">${conn ? '<canvas id="cWeek"></canvas>' : emptyBox("Sem dados ainda")}</div><p class="note">Sessões iniciadas em cada dia da semana, no período.</p></div>
+    <div class="card"><h3><b>Telas mais abertas</b><span class="muted">${pname()}</span></h3><div id="scrBox">${conn ? '<div class="empty">Carregando…</div>' : emptyBox("Sem dados ainda")}</div></div>
     <div class="card"><h3><b>Eventos mais frequentes</b><span class="muted">${pname()}</span></h3><div id="evBox">${conn ? '<div class="empty">Carregando eventos…</div>' : emptyBox("Sem dados ainda")}</div></div>
   </div>`;
 }
 pGame.after = () => {
   const g = S.gameId; if (!S.games[g]) return; chartsAfter(g);
   if (!hasData(g)) return;
+  drawHabits(g);
   const since = range().start;
   get(query(ref(db, "events/" + g), orderByChild("t"), startAt(since), limitToLast(5000))).then(s => {
-    const c = {}; let n = 0; s.forEach(x => { const e = x.val(); let k = e.n; if (k === "ui" && e.p?.botao) k = "Botão: " + e.p.botao; c[k] = (c[k] || 0) + 1; n++; });
-    const el = $("#evBox"); if (el) el.innerHTML = n ? barsHtml(c, "vezes", 12) + (n >= 5000 ? '<p class="note">Mostrando os 5.000 eventos mais recentes do período.</p>' : "") : emptyBox("Nenhum evento no período");
-  }).catch(e => { const el = $("#evBox"); if (el) el.innerHTML = emptyBox("Erro ao carregar eventos", esc(e.message)); });
+    const c = {}, scr = {}; let n = 0;
+    s.forEach(x => { const e = x.val(); n++;
+      if (e.n === "tela") { const k = SCREEN[e.p?.aba || e.p?.pagina] || e.p?.aba || e.p?.pagina || "?"; scr[k] = (scr[k] || 0) + 1; return; }
+      if (e.n === "session_start" || e.n === "session_end") return;
+      let k = EVNAME[e.n] || e.n; if (e.n === "ui" && e.p?.botao) k = "Botão: " + e.p.botao; c[k] = (c[k] || 0) + 1; });
+    const el = $("#evBox"); if (el) el.innerHTML = Object.keys(c).length ? barsHtml(c, "vezes", 12) + (n >= 5000 ? '<p class="note">Mostrando os 5.000 eventos mais recentes do período.</p>' : "") : emptyBox("Nenhum evento no período");
+    const el2 = $("#scrBox"); if (el2) el2.innerHTML = Object.keys(scr).length ? barsHtml(scr, "aberturas", 10) : emptyBox("Nenhuma tela registrada", "O jogo precisa enviar o evento \"tela\".");
+  }).catch(e => { ["#evBox", "#scrBox"].forEach(id => { const el = $(id); if (el) el.innerHTML = emptyBox("Erro ao carregar", esc(e.message)); }); });
 };
 
 function barsHtml(obj, unit, max = 8) {
@@ -586,5 +599,298 @@ function gameForm(g) {
     const data = { name: $("#fName").value.trim(), color: $("#fColor").value, status: $("#fStatus").value, downloads: $("#fDl").value.trim(), notes: $("#fNotes").value.trim(), updated: Date.now(), ...(g ? {} : { created: Date.now() }) };
     try { await update(ref(db, "games/" + id), data); S.games[id] = { ...(S.games[id] || {}), ...data }; $("#modal").classList.add("hide"); toast("Jogo salvo"); await loadDownloads(); render(); }
     catch (e) { $("#fErr").textContent = "Erro ao salvar: " + e.message; }
+  };
+}
+
+// ---------------- versões e hábitos ----------------
+const EVNAME = { partida_inicio: "Partida iniciada", partida_fim: "Partida terminada", carreira_nova: "Carreira nova", clube_criado: "Clube criado", saf_compra: "Compra de SAF",
+  aviso_visto: "Aviso visto", aviso_clique: "Aviso: botão tocado", aviso_fechar: "Aviso fechado", evento_visto: "Evento visto", evento_clique: "Evento tocado", update_visto: "Pedido de atualização visto", update_clique: "Tocou em atualizar" };
+const SCREEN = {};
+const vnum = v => { const m = String(v || "").match(/(\d+)(?!.*\d)/); return m ? +m[1] : 0; };
+function versionStats(g, rg = range()) {
+  const out = {};
+  sessList(g).filter(s => s.l >= rg.start && s.s <= rg.end).forEach(s => {
+    const v = s.v || "?", o = out[v] ||= { v, users: new Set(), sess: 0, dur: 0, durN: 0, nw: 0, last: 0 };
+    o.users.add(s.u); o.sess++; if (s.d > 0) { o.dur += s.d; o.durN++; } if (s.n) o.nw++; if (s.l > o.last) o.last = s.l;
+  });
+  const now = serverNow();
+  Object.entries(S.online[g] || {}).forEach(([u, o]) => { if (now - o.l < ONLINE_WINDOW) { const x = out[o.v || "?"]; if (x) x.on = (x.on || 0) + 1; } });
+  return Object.values(out).sort((a, b) => vnum(b.v) - vnum(a.v) || b.sess - a.sess);
+}
+function versionTable(g) {
+  const vs = versionStats(g);
+  if (!vs.length) return emptyBox("Nenhuma sessão no período");
+  const tot = vs.reduce((a, b) => a + b.users.size, 0) || 1, newest = vnum(vs[0].v), mins = (S.remote[g]?.update?.on && S.remote[g].update.min) || 0;
+  return `<div class="tw"><table><tr><th>Versão</th><th class="n">Jogadores</th><th class="n">% do público</th><th class="n">Online</th><th class="n">Sessões</th><th class="n">Tempo médio</th><th class="n">Novos</th><th class="n">Último uso</th></tr>
+  ${vs.map(x => `<tr><td><b>${esc(x.v)}</b> ${vnum(x.v) === newest ? '<span class="tag t-real">Mais nova</span>' : mins && vnum(x.v) < mins ? '<span class="tag t-off">Abaixo da mínima</span>' : '<span class="tag t-na">Antiga</span>'}</td>
+    <td class="n">${fmt(x.users.size)}</td><td class="n">${pct(x.users.size / tot * 100)}</td><td class="n">${fmt(x.on || 0)}</td><td class="n">${fmt(x.sess)}</td><td class="n">${x.durN ? dur(x.dur / x.durN) : "—"}</td><td class="n">${fmt(x.nw)}</td><td class="n">${ago(x.last)}</td></tr>`).join("")}</table></div>
+  <p class="note">Quem está em versão antiga pode ser avisado em <a href="#/ctrl" style="color:var(--amber)">Controle → Versão mínima</a>.</p>`;
+}
+function peakConcurrent(only, rg = range()) {
+  const pts = [];
+  sessList(only).forEach(s => { const a = Math.max(s.s || 0, rg.start), b = Math.min((s.l || 0) + 30e3, rg.end); if (b > a) { pts.push([a, 1]); pts.push([b, -1]); } });
+  pts.sort((x, y) => x[0] - y[0] || x[1] - y[1]);
+  let c = 0, max = 0, at = 0; pts.forEach(([t, d]) => { c += d; if (c > max) { max = c; at = t; } });
+  return { max, at };
+}
+function peakNote(g) {
+  const p = peakConcurrent(g), hrs = hourDist(g), best = hrs.indexOf(Math.max(...hrs));
+  return `<p class="note">Horário com mais sessões: <b style="color:var(--chalk)">${best}h às ${best + 1}h</b>. Pico de jogadores ao mesmo tempo: <b style="color:var(--chalk)">${p.max}</b>${p.at ? " (" + new Date(p.at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + ")" : ""}.</p>`;
+}
+function hourDist(only, rg = range()) { const h = Array(24).fill(0); sessList(only).filter(s => s.s >= rg.start && s.s <= rg.end).forEach(s => h[new Date(s.s).getHours()]++); return h; }
+function weekDist(only, rg = range()) { const w = Array(7).fill(0); sessList(only).filter(s => s.s >= rg.start && s.s <= rg.end).forEach(s => w[new Date(s.s).getDay()]++); return w; }
+function drawHabits(g) {
+  chart("cHour", "bar", [...Array(24).keys()].map(h => h + "h"), [{ label: "Sessões", data: hourDist(g), color: C_AMBER }]);
+  chart("cWeek", "bar", ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"], [{ label: "Sessões", data: weekDist(g), color: C_VIOLET }]);
+}
+
+// ---------------- jogadores ----------------
+function pPlayers() {
+  const all = playList(null);
+  if (!all.length) return `<div class="card">${emptyBox("Sem jogadores ainda", "A lista aparece quando os jogos começarem a enviar dados.")}</div>`;
+  const now = serverNow();
+  const loyal = all.filter(p => (p.sessions || 0) >= 5).length, gone = all.filter(p => p.last && now - p.last > 7 * DAY).length, nw = all.filter(p => p.first >= now - 7 * DAY).length;
+  return `<div class="grid4">
+    ${kpi("Jogadores", fmt(all.length), TAG.real, HELP.players)}
+    ${kpi("Novos (7 dias)", fmt(nw), TAG.real, "Jogadores que abriram o jogo pela primeira vez nos últimos 7 dias.")}
+    ${kpi("Fiéis", fmt(loyal), TAG.real, "Jogadores com 5 sessões ou mais.")}
+    ${kpi("Sumidos", fmt(gone), TAG.real, "Jogadores que não abrem o jogo há mais de 7 dias.")}
+  </div>
+  <div class="card">
+    <div class="filters">
+      <select id="pfG"><option value="">Todos os jogos</option>${Object.entries(S.games).map(([g, i]) => `<option value="${esc(g)}" ${S.pf.g === g ? "selected" : ""}>${esc(i.name || g)}</option>`).join("")}</select>
+      <select id="pfS">${[["last", "Jogou por último"], ["first", "Mais novos"], ["secs", "Mais tempo jogado"], ["sessions", "Mais sessões"]].map(([v, l]) => `<option value="${v}" ${S.pf.sort === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+      <input id="pfQ" placeholder="Buscar código, aparelho ou versão" value="${esc(S.pf.q)}">
+    </div>
+    <div id="plist"></div>
+  </div>
+  <p class="note">Cada jogador é um código anônimo. Nenhum nome, e-mail ou localização é coletado.</p>`;
+}
+function playersRows() {
+  const now = serverNow(), q = S.pf.q.toLowerCase();
+  let ps = playList(S.pf.g || null).filter(p => !q || [p.u, p.model, p.ver, p.os].some(x => String(x || "").toLowerCase().includes(q)));
+  const k = S.pf.sort; ps.sort((a, b) => (b[k] || 0) - (a[k] || 0));
+  const n = ps.length; ps = ps.slice(0, 150);
+  if (!n) return emptyBox("Nenhum jogador encontrado");
+  return `<p class="note" style="margin:0 0 8px">${fmt(n)} jogador(es)${n > 150 ? " · mostrando 150" : ""}</p><div class="plist">${ps.map(p => {
+    const on = S.online[p.g]?.[p.u] && now - S.online[p.g][p.u].l < ONLINE_WINDOW;
+    return `<button class="pitem" data-pl="${esc(p.g)}|${esc(p.u)}"><div class="pav" style="background:${esc(gcolor(p.g))}">${esc(p.u.slice(0, 2).toUpperCase())}</div>
+    <div class="pm"><b>${on ? '<span class="live"></span> ' : ""}#${esc(p.u.slice(0, 6))}</b><small>${esc(S.games[p.g]?.name || p.g)} · ${esc(p.ver || "—")} · ${esc(p.model || p.os || "—")}</small></div>
+    <div class="ps"><b>${dur(p.secs || 0)}</b><small>${fmt(p.sessions || 0)} sessões · ${on ? "jogando agora" : ago(p.last)}</small></div></button>`; }).join("")}</div>`;
+}
+pPlayers.after = () => {
+  const el = $("#plist"); if (!el) return;
+  const draw = () => { el.innerHTML = playersRows(); el.querySelectorAll("[data-pl]").forEach(b => b.onclick = () => { const [g, u] = b.dataset.pl.split("|"); playerModal(g, u); }); };
+  $("#pfG").onchange = e => { S.pf.g = e.target.value; draw(); };
+  $("#pfS").onchange = e => { S.pf.sort = e.target.value; draw(); };
+  $("#pfQ").oninput = e => { S.pf.q = e.target.value; clearTimeout(S._pq); S._pq = setTimeout(draw, 200); };
+  draw();
+};
+function playerModal(g, u) {
+  const p = S.players[g]?.[u]; if (!p) return;
+  const ss = Object.values(S.sessions[g] || {}).filter(s => s.u === u).sort((a, b) => b.s - a.s);
+  const days = new Set(ss.map(s => dkey(s.s))).size;
+  modal(`<h3>Jogador #${esc(u.slice(0, 6))}</h3>
+  <table>
+    <tr><td>Jogo</td><td class="n"><b>${esc(S.games[g]?.name || g)}</b></td></tr>
+    <tr><td>Primeira vez</td><td class="n">${p.first ? new Date(p.first).toLocaleString("pt-BR") : "—"}</td></tr>
+    <tr><td>Última vez</td><td class="n">${ago(p.last)}</td></tr>
+    <tr><td>Sessões · dias diferentes</td><td class="n">${fmt(p.sessions || 0)} · ${days}</td></tr>
+    <tr><td>Tempo total jogado</td><td class="n">${dur(p.secs || 0)}</td></tr>
+    <tr><td>Versão</td><td class="n">${esc(p.ver || "—")}</td></tr>
+    <tr><td>Aparelho</td><td class="n">${esc([p.model, p.os && p.os + " " + (p.osv || "")].filter(Boolean).join(" · ") || "—")}</td></tr>
+    <tr><td>Tela · idioma</td><td class="n">${esc(p.scr || "—")} · ${esc(p.lang || "—")}</td></tr>
+    <tr><td>Região estimada</td><td class="n">${esc(country(p))}</td></tr>
+  </table>
+  <p class="sec" style="margin:8px 0 0">Últimas sessões</p>
+  <div class="tw"><table><tr><th>Início</th><th class="n">Duração</th><th>Versão</th></tr>${ss.slice(0, 12).map(s => `<tr><td>${new Date(s.s).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</td><td class="n">${dur(s.d)}</td><td>${esc(s.v || "—")}</td></tr>`).join("") || '<tr><td colspan="3" class="muted">Nenhuma sessão</td></tr>'}</table></div>
+  <p class="sec" style="margin:8px 0 0">O que fez por último</p><div id="pev"><div class="empty">Carregando…</div></div>
+  <button class="ghost" data-close>Fechar</button>`);
+  get(query(ref(db, "events/" + g), orderByChild("u"), equalTo(u))).then(snap => {
+    const ev = []; snap.forEach(x => { ev.push(x.val()); });
+    ev.sort((a, b) => b.t - a.t);
+    const el = $("#pev"); if (!el) return;
+    el.innerHTML = ev.length ? `<div class="tl">${ev.filter(e => e.n !== "session_end").slice(0, 25).map(e => `<div><small>${new Date(e.t).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</small><span>${esc(evLabel(e))}</span></div>`).join("")}</div>` : emptyBox("Nenhum evento registrado");
+  }).catch(e => { const el = $("#pev"); if (el) el.innerHTML = emptyBox("Não foi possível carregar", esc(e.message)); });
+}
+function evLabel(e) {
+  if (e.n === "tela") return "Abriu a tela " + (e.p?.aba || e.p?.pagina || "?");
+  if (e.n === "session_start") return e.p?.novo ? "Abriu o jogo pela primeira vez" : "Abriu o jogo";
+  if (e.n === "ui") return "Tocou em " + (e.p?.botao || "botão");
+  const extra = e.p ? Object.entries(e.p).filter(([k]) => k !== "id").map(([k, v]) => k + ": " + v).join(", ") : "";
+  return (EVNAME[e.n] || e.n) + (extra ? " (" + extra + ")" : "");
+}
+
+// ---------------- controle dos jogos ----------------
+const GAME_URL = { PRANCHETA: "https://lumbragames.github.io/Prancheta/", WILDFORGE: "https://lumbragames.github.io/" };
+const KINDS = { info: ["Aviso", "#4cc9f0"], novidade: ["Novidade", "#3ddc84"], evento: ["Evento", "#ffb347"], alerta: ["Importante", "#ff5470"], update: ["Atualização", "#8b5cf6"] };
+const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const toLocal = t => { if (!t) return ""; const d = new Date(t - new Date(t).getTimezoneOffset() * 6e4); return d.toISOString().slice(0, 16); };
+const fromLocal = v => v ? new Date(v).getTime() : 0;
+const when = t => new Date(t).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+function state(o) {
+  if (!o || !o.on) return ["Desligado", "t-na"];
+  const t = serverNow();
+  if (o.from && t < o.from) return ["Agendado · " + when(o.from), "t-none"];
+  if (o.to && t > o.to) return ["Terminou", "t-na"];
+  return ["No ar" + (o.to ? " até " + when(o.to) : ""), "t-real"];
+}
+function newestVersion(g) { let best = 0, label = ""; Object.values(S.players[g] || {}).forEach(p => { const n = vnum(p.ver); if (n > best) { best = n; label = p.ver; } }); return { n: best, label }; }
+function phone(kind, title, text, btn, hasUrl) {
+  const k = KINDS[kind] || KINDS.info;
+  return `<div class="phone"><div class="pbox"><div class="ptop" style="color:${k[1]}"><i></i>${k[0]}</div>${title ? `<h5>${esc(title)}</h5>` : ""}${text ? `<p>${esc(text)}</p>` : ""}
+    <div class="pbtn">${hasUrl ? '<span class="no">Fechar</span>' : ""}<span class="ok">${esc(btn || (hasUrl ? "Ver agora" : "OK"))}</span></div></div></div>`;
+}
+function pCtrl() {
+  const ids = Object.keys(S.games);
+  if (!ids.length) return pHome();
+  return `<p class="note" style="margin:-4px 0 14px">Tudo o que você liga aqui aparece dentro do jogo na próxima vez que o jogador abrir (ou em até 5 minutos para quem já está jogando). Só funciona nas versões com o Lumbra Control 1.1 ou mais novo.</p>` +
+  ids.map(g => {
+    const r = S.remote[g] || {}, info = S.games[g], nv = newestVersion(g);
+    const n = r.notice, e = r.event, u = r.update;
+    const [ns, nc] = state(n), [es, ec] = state(e);
+    const us = u?.on ? [`Ligado · mínima ${u.min}${u.block ? " (bloqueia)" : ""}`, u.block ? "t-off" : "t-real"] : ["Desligado", "t-na"];
+    const below = u?.on ? Object.values(S.players[g] || {}).filter(p => vnum(p.ver) && vnum(p.ver) < u.min && p.last > serverNow() - 30 * DAY).length : 0;
+    return `<div class="card ctrl">
+      <h3><span class="gt"><i style="background:${esc(info.color || C_AMBER)}"></i><b>${esc(info.name || g)}</b></span><span class="muted">versão mais nova vista: ${esc(nv.label || "—")}</span></h3>
+      <div class="grid3c">
+        <div class="cbox"><div class="ch"><b>📣 Aviso</b><span class="tag ${nc}">${ns}</span></div>
+          ${n?.on || n?.title ? phone(n.kind, n.title, n.text, n.btn, !!n.url) + `<div class="cst" data-st="${esc(g)}|notice|${esc(n.id || "")}|${n.created || 0}">Carregando números…</div>` : '<p class="muted small">Uma mensagem que aparece na tela do jogador: novidade, manutenção, pedido de avaliação, link pro vídeo novo…</p>'}
+          <div class="btnrow"><button class="primary sm" data-nf="${esc(g)}">${n?.title ? "Novo aviso" : "Criar aviso"}</button>${n?.on ? `<button class="ghost sm" data-ne="${esc(g)}">Editar</button><button class="ghost sm" data-off="${esc(g)}|notice">Desligar</button>` : ""}</div></div>
+        <div class="cbox"><div class="ch"><b>🔥 Evento especial</b><span class="tag ${ec}">${es}</span></div>
+          ${e?.name ? `<div class="pillprev"><i style="background:${esc(e.color || C_AMBER)}"></i>${esc((e.emoji ? e.emoji + " " : "") + e.name)}</div><p class="muted small">${esc(e.text || "")}</p>${e.from || e.to ? `<p class="muted small">${e.from ? "De " + when(e.from) : ""} ${e.to ? "até " + when(e.to) : ""}</p>` : ""}<div class="cst" data-st="${esc(g)}|event|${esc(e.id || "")}|${e.created || 0}">Carregando números…</div>` : '<p class="muted small">Uma faixa que aparece no topo do jogo durante o período do evento (ex.: "Semana do Clássico"). Tocando nela, o jogador vê os detalhes.</p>'}
+          <div class="btnrow"><button class="primary sm" data-ef="${esc(g)}">${e?.name ? "Novo evento" : "Criar evento"}</button>${e?.on ? `<button class="ghost sm" data-off="${esc(g)}|event">Desligar</button>` : ""}</div></div>
+        <div class="cbox"><div class="ch"><b>⬆️ Versão mínima</b><span class="tag ${us[1]}">${us[0]}</span></div>
+          <p class="muted small">${u?.on ? `Quem estiver abaixo da versão ${u.min} recebe o pedido para atualizar${u.block ? " e não consegue jogar até atualizar" : ""}. ${below} jogador(es) ativo(s) nos últimos 30 dias ainda estão abaixo.` : "Peça para quem está numa versão antiga baixar a nova. Dá para só avisar ou bloquear até atualizar."}</p>
+          ${u?.on ? `<div class="cst" data-st="${esc(g)}|update||${u.created || 0}">Carregando números…</div>` : ""}
+          <div class="btnrow"><button class="primary sm" data-uf="${esc(g)}">${u?.on ? "Alterar" : "Configurar"}</button>${u?.on ? `<button class="ghost sm" data-off="${esc(g)}|update">Desligar</button>` : ""}</div></div>
+      </div>
+      ${histHtml(g)}
+    </div>`;
+  }).join("");
+}
+function histHtml(g) {
+  const h = Object.values(S.rlog[g] || {}).sort((a, b) => b.at - a.at).slice(0, 8);
+  if (!h.length) return "";
+  const T = { notice: "📣", event: "🔥", update: "⬆️" };
+  return `<details class="hist"><summary>Histórico (${h.length})</summary>${h.map(x => `<div><small>${when(x.at)}</small><span>${T[x.type] || "•"} ${esc(x.what)}</span></div>`).join("")}</details>`;
+}
+pCtrl.after = () => {
+  document.querySelectorAll("[data-nf]").forEach(b => b.onclick = () => noticeForm(b.dataset.nf, false));
+  document.querySelectorAll("[data-ne]").forEach(b => b.onclick = () => noticeForm(b.dataset.ne, true));
+  document.querySelectorAll("[data-ef]").forEach(b => b.onclick = () => eventForm(b.dataset.ef));
+  document.querySelectorAll("[data-uf]").forEach(b => b.onclick = () => updateForm(b.dataset.uf));
+  document.querySelectorAll("[data-off]").forEach(b => b.onclick = async () => {
+    const [g, k] = b.dataset.off.split("|");
+    if (!confirm("Desligar agora? Os jogadores deixam de ver isso.")) return;
+    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada" }[k]);
+  });
+  loadCtrlStats();
+};
+async function loadCtrlStats() {
+  const boxes = [...document.querySelectorAll("[data-st]")]; if (!boxes.length) return;
+  const byG = {};
+  boxes.forEach(b => { const [g, k, id, c] = b.dataset.st.split("|"); (byG[g] ||= []).push({ b, k, id, c: +c || 0 }); });
+  for (const [g, list] of Object.entries(byG)) {
+    const since = Math.min(...list.map(x => x.c || serverNow() - 30 * DAY));
+    try {
+      const snap = await get(query(ref(db, "events/" + g), orderByChild("t"), startAt(since), limitToLast(5000)));
+      const cnt = {}; snap.forEach(x => { const e = x.val(); if (/^(aviso|evento|update)_/.test(e.n)) { const key = e.n + "|" + (e.p?.id ?? ""); (cnt[key] ||= new Set()).add(e.u); } });
+      const c = (n, id) => (cnt[n + "|" + id]?.size || 0);
+      list.forEach(({ b, k, id }) => {
+        if (k === "notice") { const v = c("aviso_visto", id), cl = c("aviso_clique", id); b.innerHTML = `<span><b>${v}</b> viram</span><span><b>${cl}</b> tocaram no botão</span><span><b>${v ? pct(cl / v * 100) : "—"}</b> de cliques</span>`; }
+        if (k === "event") { const v = c("evento_visto", id), cl = c("evento_clique", id); b.innerHTML = `<span><b>${v}</b> viram a faixa</span><span><b>${cl}</b> abriram detalhes</span>`; }
+        if (k === "update") { let v = 0, cl = 0; Object.keys(cnt).forEach(key => { if (key.startsWith("update_visto|")) v += cnt[key].size; if (key.startsWith("update_clique|")) cl += cnt[key].size; }); b.innerHTML = `<span><b>${v}</b> receberam o pedido</span><span><b>${cl}</b> tocaram em atualizar</span>`; }
+      });
+    } catch (e) { list.forEach(({ b }) => b.textContent = "Números indisponíveis: " + e.message); }
+  }
+}
+async function saveRemote(g, k, data, what) {
+  try {
+    await set(ref(db, `remote/${g}/${k}`), data);
+    S.remote[g] = { ...(S.remote[g] || {}), [k]: data };
+    const id = rid(), entry = { type: k, what, at: serverNow() };
+    await set(ref(db, `admin/rlog/${g}/${id}`), entry).catch(() => {});
+    (S.rlog[g] ||= {})[id] = entry;
+    $("#modal").classList.add("hide"); toast("Salvo. Já vale para os jogadores."); render();
+  } catch (e) { const el = $("#fErr"); if (el) el.textContent = "Erro ao salvar: " + e.message; else toast("Erro: " + e.message); }
+}
+function noticeForm(g, edit) {
+  const cur = edit ? (S.remote[g]?.notice || {}) : {};
+  const nv = newestVersion(g);
+  modal(`<h3>${edit ? "Editar aviso" : "Novo aviso"} · ${esc(S.games[g].name || g)}</h3>
+    <label>Tipo<select id="nK">${Object.entries(KINDS).filter(([k]) => k !== "update").map(([k, v]) => `<option value="${k}" ${cur.kind === k ? "selected" : ""}>${v[0]}</option>`).join("")}</select></label>
+    <label>Título<input id="nT" maxlength="60" value="${esc(cur.title || "")}" placeholder="Ex.: Vídeo novo no canal!"></label>
+    <label>Mensagem<textarea id="nX" maxlength="400" placeholder="Escreva o que o jogador vai ler">${esc(cur.text || "")}</textarea></label>
+    <label>Link (opcional)<input id="nU" value="${esc(cur.url || "")}" placeholder="https://…"></label>
+    <div class="btnrow tiny"><button class="ghost sm" type="button" data-fill="${esc(GAME_URL[g] || "https://lumbragames.github.io/")}">Página do jogo</button><button class="ghost sm" type="button" data-fill="https://www.tiktok.com/">TikTok</button><button class="ghost sm" type="button" data-fill="https://www.youtube.com/">YouTube</button><button class="ghost sm" type="button" data-fill="https://www.instagram.com/">Instagram</button></div>
+    <label>Texto do botão<input id="nB" maxlength="24" value="${esc(cur.btn || "")}" placeholder="Ex.: Ver agora"></label>
+    <div class="two"><label>Começa<input id="nF" type="datetime-local" value="${toLocal(cur.from)}"></label><label>Termina (opcional)<input id="nE" type="datetime-local" value="${toLocal(cur.to)}"></label></div>
+    <label>Quantas vezes mostrar<select id="nQ"><option value="uma" ${cur.freq !== "sessao" ? "selected" : ""}>Uma vez para cada jogador</option><option value="sessao" ${cur.freq === "sessao" ? "selected" : ""}>Toda vez que abrir o jogo</option></select></label>
+    <label>Para quem<select id="nV"><option value="">Todas as versões</option>${nv.n ? `<option value="old" ${cur.maxV ? "selected" : ""}>Só versões antigas (abaixo da ${nv.n})</option><option value="new" ${cur.minV ? "selected" : ""}>Só a versão mais nova (${nv.n})</option>` : ""}</select></label>
+    ${edit ? '<label class="chk"><input type="checkbox" id="nR"> Mostrar de novo para quem já viu</label>' : ""}
+    <p class="muted small">Prévia no celular:</p><div id="nP"></div>
+    <p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="primary" id="nS">${edit ? "Salvar" : "Publicar aviso"}</button><button class="ghost" data-close>Cancelar</button></div>`);
+  const prev = () => $("#nP").innerHTML = phone($("#nK").value, $("#nT").value, $("#nX").value, $("#nB").value, !!$("#nU").value.trim());
+  ["#nK", "#nT", "#nX", "#nU", "#nB"].forEach(id => $(id).addEventListener("input", prev)); prev();
+  document.querySelectorAll("[data-fill]").forEach(b => b.onclick = () => { $("#nU").value = b.dataset.fill; prev(); $("#nU").focus(); });
+  $("#nS").onclick = () => {
+    const title = $("#nT").value.trim(), text = $("#nX").value.trim(), url = $("#nU").value.trim();
+    if (!title && !text) return $("#fErr").textContent = "Escreva pelo menos o título ou a mensagem.";
+    if (url && !/^https:\/\//.test(url)) return $("#fErr").textContent = "O link precisa começar com https://";
+    const from = fromLocal($("#nF").value), to = fromLocal($("#nE").value);
+    if (to && to <= (from || serverNow())) return $("#fErr").textContent = "O fim precisa ser depois do começo.";
+    const vf = $("#nV").value;
+    const data = { on: true, id: edit && !$("#nR")?.checked && cur.id ? cur.id : rid(), kind: $("#nK").value, title, text, url, btn: $("#nB").value.trim(),
+      from: from || 0, to: to || 0, freq: $("#nQ").value, minV: vf === "new" ? nv.n : 0, maxV: vf === "old" ? nv.n - 1 : 0, created: edit && cur.created ? cur.created : serverNow() };
+    saveRemote(g, "notice", data, (edit ? "Aviso editado: " : "Aviso publicado: ") + (title || text.slice(0, 40)));
+  };
+}
+function eventForm(g) {
+  const COLORS = ["#ffb347", "#ff6a3d", "#3ddc84", "#4cc9f0", "#8b5cf6", "#ff5470"];
+  modal(`<h3>Evento especial · ${esc(S.games[g].name || g)}</h3>
+    <div class="two"><label style="flex:0 0 90px">Emoji<input id="eM" maxlength="4" value="🔥"></label><label>Nome do evento<input id="eN" maxlength="40" placeholder="Ex.: Semana do Clássico"></label></div>
+    <label>Detalhes (aparecem quando o jogador toca na faixa)<textarea id="eX" maxlength="300" placeholder="Ex.: Essa semana tem clássico em todas as ligas. Mostra teu time!"></textarea></label>
+    <label>Cor<div class="colors">${COLORS.map((c, i) => `<button type="button" class="cl ${i ? "" : "on"}" data-c="${c}" style="background:${c}"></button>`).join("")}</div></label>
+    <div class="two"><label>Começa<input id="eF" type="datetime-local"></label><label>Termina<input id="eE" type="datetime-local"></label></div>
+    <p class="muted small">O evento aparece como uma faixa no topo do jogo, uma vez por sessão, sem atrapalhar a partida. Efeitos dentro do jogo (prêmios em dobro, itens…) precisam ser programados no jogo antes.</p>
+    <div id="eP"></div><p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="primary" id="eS">Ligar evento</button><button class="ghost" data-close>Cancelar</button></div>`);
+  let color = COLORS[0];
+  const prev = () => $("#eP").innerHTML = `<div class="pillprev"><i style="background:${color}"></i>${esc(($("#eM").value ? $("#eM").value + " " : "") + ($("#eN").value || "Nome do evento"))}</div>`;
+  document.querySelectorAll(".cl").forEach(b => b.onclick = () => { color = b.dataset.c; document.querySelectorAll(".cl").forEach(x => x.classList.toggle("on", x === b)); prev(); });
+  ["#eM", "#eN"].forEach(id => $(id).addEventListener("input", prev)); prev();
+  $("#eE").value = toLocal(serverNow() + 7 * DAY);
+  $("#eS").onclick = () => {
+    const name = $("#eN").value.trim(), from = fromLocal($("#eF").value), to = fromLocal($("#eE").value);
+    if (!name) return $("#fErr").textContent = "Dê um nome ao evento.";
+    if (to && to <= (from || serverNow())) return $("#fErr").textContent = "O fim precisa ser depois do começo.";
+    saveRemote(g, "event", { on: true, id: rid(), name, emoji: $("#eM").value.trim(), text: $("#eX").value.trim(), color, from: from || 0, to: to || 0, created: serverNow() }, "Evento ligado: " + name);
+  };
+}
+function updateForm(g) {
+  const cur = S.remote[g]?.update || {}, nv = newestVersion(g), vs = {};
+  Object.values(S.players[g] || {}).forEach(p => { const n = vnum(p.ver); if (n && p.last > serverNow() - 30 * DAY) vs[n] = (vs[n] || 0) + 1; });
+  modal(`<h3>Versão mínima · ${esc(S.games[g].name || g)}</h3>
+    <p class="muted small">Jogadores ativos (30 dias) por versão: ${Object.entries(vs).sort((a, b) => b[0] - a[0]).map(([v, n]) => `<span class="chip">${v}: ${n}</span>`).join("") || "—"}</p>
+    <label>Versão mínima (número)<input id="uM" type="number" min="1" value="${cur.min || nv.n || ""}"></label>
+    <p class="muted small" id="uC"></p>
+    <label>Título<input id="uT" maxlength="60" value="${esc(cur.title || "Nova versão disponível")}"></label>
+    <label>Mensagem<textarea id="uX" maxlength="300">${esc(cur.text || "Baixe a versão mais recente para ter as novidades e as correções.")}</textarea></label>
+    <label>Link para baixar<input id="uU" value="${esc(cur.url || GAME_URL[g] || "https://lumbragames.github.io/")}"></label>
+    <label class="chk"><input type="checkbox" id="uB" ${cur.block ? "checked" : ""}> Bloquear o jogo até atualizar</label>
+    <p class="warnbox small">⚠️ Com o bloqueio ligado, quem estiver em versão antiga não consegue jogar até baixar a nova. Use só se a versão antiga tiver um problema sério. Quem estiver sem internet continua jogando normalmente.</p>
+    <p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="primary" id="uS">Salvar</button><button class="ghost" data-close>Cancelar</button></div>`);
+  const cnt = () => { const m = +$("#uM").value || 0; const n = Object.entries(vs).filter(([v]) => +v < m).reduce((a, [, x]) => a + x, 0); $("#uC").textContent = m ? `${n} jogador(es) ativo(s) vão receber o pedido.` : ""; };
+  $("#uM").oninput = cnt; cnt();
+  $("#uS").onclick = () => {
+    const min = +$("#uM").value, url = $("#uU").value.trim();
+    if (!min) return $("#fErr").textContent = "Informe a versão mínima.";
+    if (!/^https:\/\//.test(url)) return $("#fErr").textContent = "O link precisa começar com https://";
+    const block = $("#uB").checked;
+    if (block && !confirm("Tem certeza? Quem estiver abaixo da versão " + min + " não vai conseguir jogar até atualizar.")) return;
+    saveRemote(g, "update", { on: true, min, title: $("#uT").value.trim(), text: $("#uX").value.trim(), url, block, created: serverNow() }, `Versão mínima ${min}${block ? " (com bloqueio)" : ""}`);
   };
 }
