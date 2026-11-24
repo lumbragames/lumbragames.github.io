@@ -764,6 +764,10 @@ function pCtrl() {
           <p class="muted small">${u?.on ? `Quem estiver abaixo da versão ${u.min} recebe o pedido para atualizar${u.block ? " e não consegue jogar até atualizar" : ""}. ${below} jogador(es) ativo(s) nos últimos 30 dias ainda estão abaixo.` : "Peça para quem está numa versão antiga baixar a nova. Dá para só avisar ou bloquear até atualizar."}</p>
           ${u?.on ? `<div class="cst" data-st="${esc(g)}|update||${u.created || 0}">Carregando números…</div>` : ""}
           <div class="btnrow"><button class="primary sm" data-uf="${esc(g)}">${u?.on ? "Alterar" : "Configurar"}</button>${u?.on ? `<button class="ghost sm" data-off="${esc(g)}|update">Desligar</button>` : ""}</div></div>
+        ${g === "prancheta" ? (() => { const pu = r.push; return `<div class="cbox"><div class="ch"><b>📲 Notificação push</b><span class="tag ${pu?.on ? "t-real" : "t-na"}">${pu?.on ? "Enviada " + when(pu.created) : "Nenhuma"}</span></div>
+          ${pu?.title ? `<div class="notifprev"><i>🔔</i><div><b>${esc(pu.title)}</b><span>${esc(pu.text || "")}</span></div></div>` : ""}
+          <p class="muted small">Aparece na barra de notificações do celular de <b>todo mundo</b>, mesmo com o jogo fechado (em até ~30 min). Só no APK versão 31 ou mais nova. Cada notificação aparece uma vez para cada jogador.</p>
+          <div class="btnrow"><button class="primary sm" data-pf="${esc(g)}">Enviar notificação para todos</button>${pu?.on ? `<button class="ghost sm" data-off="${esc(g)}|push">Cancelar</button>` : ""}</div></div>`; })() : ""}
       </div>
       ${histHtml(g)}
     </div>`;
@@ -772,7 +776,7 @@ function pCtrl() {
 function histHtml(g) {
   const h = Object.values(S.rlog[g] || {}).sort((a, b) => b.at - a.at).slice(0, 8);
   if (!h.length) return "";
-  const T = { notice: "📣", event: "🔥", update: "⬆️" };
+  const T = { notice: "📣", event: "🔥", update: "⬆️", push: "📲" };
   return `<details class="hist"><summary>Histórico (${h.length})</summary>${h.map(x => `<div><small>${when(x.at)}</small><span>${T[x.type] || "•"} ${esc(x.what)}</span></div>`).join("")}</details>`;
 }
 pCtrl.after = () => {
@@ -780,10 +784,11 @@ pCtrl.after = () => {
   document.querySelectorAll("[data-ne]").forEach(b => b.onclick = () => noticeForm(b.dataset.ne, true));
   document.querySelectorAll("[data-ef]").forEach(b => b.onclick = () => eventForm(b.dataset.ef));
   document.querySelectorAll("[data-uf]").forEach(b => b.onclick = () => updateForm(b.dataset.uf));
+  document.querySelectorAll("[data-pf]").forEach(b => b.onclick = () => pushForm(b.dataset.pf));
   document.querySelectorAll("[data-off]").forEach(b => b.onclick = async () => {
     const [g, k] = b.dataset.off.split("|");
     if (!confirm("Desligar agora? Os jogadores deixam de ver isso.")) return;
-    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada" }[k]);
+    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada", push: "Notificação cancelada" }[k]);
   });
   loadCtrlStats();
 };
@@ -814,6 +819,24 @@ async function saveRemote(g, k, data, what) {
     (S.rlog[g] ||= {})[id] = entry;
     $("#modal").classList.add("hide"); toast("Salvo. Já vale para os jogadores."); render();
   } catch (e) { const el = $("#fErr"); if (el) el.textContent = "Erro ao salvar: " + e.message; else toast("Erro: " + e.message); }
+}
+function pushForm(g) {
+  modal(`<h3>📲 Notificação para todos · ${esc(S.games[g].name || g)}</h3>
+    <label>Título<input id="pT" maxlength="50" placeholder="Ex.: Atualização 5.0 chegou! ⚽"></label>
+    <label>Mensagem<textarea id="pX" maxlength="180" placeholder="Ex.: Prancheta ao vivo, jogadas ensaiadas e muito mais. Abra o jogo!"></textarea></label>
+    <div class="notifprev big"><i>🔔</i><div><b id="pvT">Título</b><span id="pvX">Mensagem</span></div></div>
+    <p class="muted small">Vai para o celular de todos que têm o jogo instalado (APK 31+). Não dá para desfazer depois que chegar.</p>
+    <p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="ghost" id="mCancel">Cancelar</button><button class="primary" id="mSave">Enviar para todos</button></div>`);
+  const upd = () => { $("#pvT").textContent = $("#pT").value || "Título"; $("#pvX").textContent = $("#pX").value || "Mensagem"; };
+  $("#pT").oninput = upd; $("#pX").oninput = upd;
+  $("#mCancel").onclick = () => $("#modal").classList.add("hide");
+  $("#mSave").onclick = () => {
+    const title = $("#pT").value.trim(), text = $("#pX").value.trim();
+    if (!title || !text) { $("#fErr").textContent = "Escreva o título e a mensagem."; return; }
+    if (!confirm("Enviar esta notificação para todos os jogadores?")) return;
+    saveRemote(g, "push", { on: true, id: rid(), title, text, created: serverNow() }, "Notificação enviada: " + title);
+  };
 }
 function noticeForm(g, edit) {
   const cur = edit ? (S.remote[g]?.notice || {}) : {};
