@@ -768,6 +768,10 @@ function pCtrl() {
           ${pu?.title ? `<div class="notifprev"><i>🔔</i><div><b>${esc(pu.title)}</b><span>${esc(pu.text || "")}</span></div></div>` : ""}
           <p class="muted small">Aparece na barra de notificações do celular de <b>todo mundo</b>, mesmo com o jogo fechado (em até ~30 min). Só no APK versão 31 ou mais nova. Cada notificação aparece uma vez para cada jogador.</p>
           <div class="btnrow"><button class="primary sm" data-pf="${esc(g)}">Enviar notificação para todos</button>${pu?.on ? `<button class="ghost sm" data-off="${esc(g)}|push">Cancelar</button>` : ""}</div></div>`; })() : ""}
+        ${g === "prancheta" ? (() => { const vd = r.video; return `<div class="cbox"><div class="ch"><b>🎬 Vídeo da atualização</b><span class="tag ${vd?.on ? "t-real" : "t-na"}">${vd?.on ? "No ar · v" + esc(vd.ver || "") : "Desligado"}</span></div>
+          ${vd?.on ? `<p class="small">${esc(vd.title || "")}<br><span class="muted">${esc(vd.yt || "")}</span></p>` : ""}
+          <p class="muted small">Aparece um card "Novidades da versão" na tela inicial e no jogo. O vídeo toca dentro do jogo e tem o botão "Ver no YouTube". Abre sozinho uma vez para cada jogador.</p>
+          <div class="btnrow"><button class="primary sm" data-vf="${esc(g)}">${vd?.on ? "Trocar vídeo" : "Colocar vídeo"}</button>${vd?.on ? `<button class="ghost sm" data-off="${esc(g)}|video">Tirar</button>` : ""}</div></div>`; })() : ""}
       </div>
       ${histHtml(g)}
     </div>`;
@@ -776,7 +780,7 @@ function pCtrl() {
 function histHtml(g) {
   const h = Object.values(S.rlog[g] || {}).sort((a, b) => b.at - a.at).slice(0, 8);
   if (!h.length) return "";
-  const T = { notice: "📣", event: "🔥", update: "⬆️", push: "📲" };
+  const T = { notice: "📣", event: "🔥", update: "⬆️", push: "📲", video: "🎬" };
   return `<details class="hist"><summary>Histórico (${h.length})</summary>${h.map(x => `<div><small>${when(x.at)}</small><span>${T[x.type] || "•"} ${esc(x.what)}</span></div>`).join("")}</details>`;
 }
 pCtrl.after = () => {
@@ -785,10 +789,11 @@ pCtrl.after = () => {
   document.querySelectorAll("[data-ef]").forEach(b => b.onclick = () => eventForm(b.dataset.ef));
   document.querySelectorAll("[data-uf]").forEach(b => b.onclick = () => updateForm(b.dataset.uf));
   document.querySelectorAll("[data-pf]").forEach(b => b.onclick = () => pushForm(b.dataset.pf));
+  document.querySelectorAll("[data-vf]").forEach(b => b.onclick = () => videoForm(b.dataset.vf));
   document.querySelectorAll("[data-off]").forEach(b => b.onclick = async () => {
     const [g, k] = b.dataset.off.split("|");
     if (!confirm("Desligar agora? Os jogadores deixam de ver isso.")) return;
-    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada", push: "Notificação cancelada" }[k]);
+    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada", push: "Notificação cancelada", video: "Vídeo da atualização retirado" }[k]);
   });
   loadCtrlStats();
 };
@@ -819,6 +824,22 @@ async function saveRemote(g, k, data, what) {
     (S.rlog[g] ||= {})[id] = entry;
     $("#modal").classList.add("hide"); toast("Salvo. Já vale para os jogadores."); render();
   } catch (e) { const el = $("#fErr"); if (el) el.textContent = "Erro ao salvar: " + e.message; else toast("Erro: " + e.message); }
+}
+function videoForm(g) {
+  const cur = S.remote[g]?.video || {};
+  modal(`<h3>🎬 Vídeo da atualização · ${esc(S.games[g].name || g)}</h3>
+    <label>Versão<input id="vV" maxlength="10" value="${esc(cur.ver || "")}" placeholder="Ex.: 5.1"></label>
+    <label>Título do card<input id="vT" maxlength="60" value="${esc(cur.title || "")}" placeholder="Ex.: Taça na final, presidente e muito mais!"></label>
+    <label>Link do YouTube<input id="vY" value="${esc(cur.yt || "")}" placeholder="https://youtu.be/..."></label>
+    <p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="ghost" id="mCancel">Cancelar</button><button class="primary" id="mSave">Salvar</button></div>`);
+  $("#mCancel").onclick = () => $("#modal").classList.add("hide");
+  $("#mSave").onclick = () => {
+    const ver = $("#vV").value.trim(), title = $("#vT").value.trim(), yt = $("#vY").value.trim();
+    if (!ver) return $("#fErr").textContent = "Informe a versão.";
+    if (!/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(yt)) return $("#fErr").textContent = "Cole o link do vídeo no YouTube (https://youtu.be/... ou https://www.youtube.com/...).";
+    saveRemote(g, "video", { on: true, ver, title, yt, created: serverNow() }, "Vídeo da atualização: v" + ver);
+  };
 }
 function pushForm(g) {
   modal(`<h3>📲 Notificação para todos · ${esc(S.games[g].name || g)}</h3>
@@ -912,6 +933,9 @@ function updateForm(g) {
     const min = +$("#uM").value, url = $("#uU").value.trim();
     if (!min) return $("#fErr").textContent = "Informe a versão mínima.";
     if (!/^https:\/\//.test(url)) return $("#fErr").textContent = "O link precisa começar com https://";
+    // trava: não deixa pedir uma versão que ninguém tem ainda (senão o jogo fica pedindo atualização sem parar)
+    const nvv = newestVersion(g).n;
+    if (nvv && min > nvv) return $("#fErr").textContent = `Nenhum jogador tem a versão ${min} ainda (a mais nova em uso é a ${nvv}). Confira se ela já está no site e se alguém já instalou; senão o jogo vai pedir atualização sem parar.`;
     const block = $("#uB").checked;
     if (block && !confirm("Tem certeza? Quem estiver abaixo da versão " + min + " não vai conseguir jogar até atualizar.")) return;
     saveRemote(g, "update", { on: true, min, title: $("#uT").value.trim(), text: $("#uX").value.trim(), url, block, created: serverNow() }, `Versão mínima ${min}${block ? " (com bloqueio)" : ""}`);
