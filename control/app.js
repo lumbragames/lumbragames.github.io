@@ -772,6 +772,15 @@ function pCtrl() {
           ${vd?.on ? `<p class="small">${esc(vd.title || "")}<br><span class="muted">${esc(vd.yt || "")}</span></p>` : ""}
           <p class="muted small">Aparece um card "Novidades da versão" na tela inicial e no jogo. O vídeo toca dentro do jogo e tem o botão "Ver no YouTube". Abre sozinho uma vez para cada jogador.</p>
           <div class="btnrow"><button class="primary sm" data-vf="${esc(g)}">${vd?.on ? "Trocar vídeo" : "Colocar vídeo"}</button>${vd?.on ? `<button class="ghost sm" data-off="${esc(g)}|video">Tirar</button>` : ""}</div></div>`; })() : ""}
+        ${g === "prancheta" ? (() => { const ad = r.ads, py = r.pay; return `<div class="cbox"><div class="ch"><b>💰 Anúncios com recompensa</b><span class="tag ${ad?.on === false ? "t-na" : "t-real"}">${ad?.on === false ? "Desligados" : "Ligados"}</span></div>
+          <p class="muted small">O jogador vê um anúncio e ganha 25 Pranfixas (até 5 por dia, 8 para Sócio). Bloco: ${esc(ad?.unit || "Prancheta Premiado (padrão do jogo)")}</p>
+          <div class="btnrow"><button class="primary sm" data-adf="${esc(g)}">Trocar bloco</button>${ad?.on !== false ? `<button class="ghost sm" data-off="${esc(g)}|ads">Desligar</button>` : ""}</div></div>
+        <div class="cbox"><div class="ch"><b>💳 Pix (Mercado Pago)</b><span class="tag ${py?.on ? "t-real" : "t-na"}">${py?.on ? "Ligado" : "Desligado"}</span></div>
+          <p class="muted small">${py?.on ? "Servidor: " + esc(py.url) : "Quando o servidor de pagamento estiver pronto, cole o endereço dele aqui para liberar a compra de Pranfixas e do Sócio Prancheta."}</p>
+          <div class="btnrow"><button class="primary sm" data-pyf="${esc(g)}">${py?.on ? "Alterar" : "Ligar o Pix"}</button>${py?.on ? `<button class="ghost sm" data-off="${esc(g)}|pay">Desligar</button>` : ""}</div></div>
+        <div class="cbox"><div class="ch"><b>🛡️ Regras do banco</b><span class="tag t-est">Online 6.0</span></div>
+          <p class="muted small">O ranking, o Desafio da Semana e a liga com amigos precisam das regras novas no Firebase. Copie aqui (já vão com o seu código de administrador) e cole em Firebase → Realtime Database → Regras → Publicar.</p>
+          <div class="btnrow"><button class="primary sm" id="rulesCopy">Copiar regras novas</button></div></div>`; })() : ""}
       </div>
       ${histHtml(g)}
     </div>`;
@@ -780,7 +789,7 @@ function pCtrl() {
 function histHtml(g) {
   const h = Object.values(S.rlog[g] || {}).sort((a, b) => b.at - a.at).slice(0, 8);
   if (!h.length) return "";
-  const T = { notice: "📣", event: "🔥", update: "⬆️", push: "📲", video: "🎬" };
+  const T = { notice: "📣", event: "🔥", update: "⬆️", push: "📲", video: "🎬", ads: "💰", pay: "💳" };
   return `<details class="hist"><summary>Histórico (${h.length})</summary>${h.map(x => `<div><small>${when(x.at)}</small><span>${T[x.type] || "•"} ${esc(x.what)}</span></div>`).join("")}</details>`;
 }
 pCtrl.after = () => {
@@ -790,10 +799,13 @@ pCtrl.after = () => {
   document.querySelectorAll("[data-uf]").forEach(b => b.onclick = () => updateForm(b.dataset.uf));
   document.querySelectorAll("[data-pf]").forEach(b => b.onclick = () => pushForm(b.dataset.pf));
   document.querySelectorAll("[data-vf]").forEach(b => b.onclick = () => videoForm(b.dataset.vf));
+  document.querySelectorAll("[data-adf]").forEach(b => b.onclick = () => adsForm(b.dataset.adf));
+  document.querySelectorAll("[data-pyf]").forEach(b => b.onclick = () => payForm(b.dataset.pyf));
+  const rc = $("#rulesCopy"); if (rc) rc.onclick = copyRules;
   document.querySelectorAll("[data-off]").forEach(b => b.onclick = async () => {
     const [g, k] = b.dataset.off.split("|");
     if (!confirm("Desligar agora? Os jogadores deixam de ver isso.")) return;
-    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada", push: "Notificação cancelada", video: "Vídeo da atualização retirado" }[k]);
+    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada", push: "Notificação cancelada", video: "Vídeo da atualização retirado", ads: "Anúncios desligados", pay: "Pix desligado" }[k]);
   });
   loadCtrlStats();
 };
@@ -840,6 +852,41 @@ function videoForm(g) {
     if (!/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(yt)) return $("#fErr").textContent = "Cole o link do vídeo no YouTube (https://youtu.be/... ou https://www.youtube.com/...).";
     saveRemote(g, "video", { on: true, ver, title, yt, created: serverNow() }, "Vídeo da atualização: v" + ver);
   };
+}
+function adsForm(g) {
+  const cur = S.remote[g]?.ads || {};
+  modal(`<h3>💰 Anúncios · ${esc(S.games[g].name || g)}</h3>
+    <label>Código do bloco "Premiado" (AdMob)<input id="aU" value="${esc(cur.unit || "")}" placeholder="ca-app-pub-0000000000000000/0000000000"></label>
+    <p class="muted small">Fica em AdMob → Apps → Prancheta → Blocos de anúncios. É o código com uma barra ( / ). Deixe vazio para usar o bloco padrão (Prancheta Premiado).</p>
+    <p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="ghost" id="mCancel">Cancelar</button><button class="primary" id="mSave">Salvar e ligar</button></div>`);
+  $("#mCancel").onclick = () => $("#modal").classList.add("hide");
+  $("#mSave").onclick = () => {
+    const unit = $("#aU").value.trim();
+    if (unit && !/^ca-app-pub-\d{10,20}\/\d{6,14}$/.test(unit)) return $("#fErr").textContent = "Esse não parece o código do bloco (formato ca-app-pub-…/…).";
+    saveRemote(g, "ads", { on: true, unit, created: serverNow() }, "Anúncios ligados" + (unit ? ": " + unit : ""));
+  };
+}
+function payForm(g) {
+  const cur = S.remote[g]?.pay || {};
+  modal(`<h3>💳 Pix · ${esc(S.games[g].name || g)}</h3>
+    <label>Endereço do servidor de pagamento<input id="yU" value="${esc(cur.url || "")}" placeholder="https://prancheta-pix.SEU-NOME.workers.dev"></label>
+    <p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="ghost" id="mCancel">Cancelar</button><button class="ghost" id="mTest">Testar</button><button class="primary" id="mSave">Salvar e ligar</button></div>`);
+  $("#mCancel").onclick = () => $("#modal").classList.add("hide");
+  $("#mTest").onclick = async () => { const u = $("#yU").value.trim().replace(/\/$/, ""); try { const r = await fetch(u + "/ping"); const j = await r.json(); $("#fErr").textContent = j.ok ? (j.token ? "Servidor funcionando e com o token do Mercado Pago!" : "Servidor funcionando, mas FALTA o token do Mercado Pago (MP_TOKEN).") : "Resposta estranha do servidor."; } catch (e) { $("#fErr").textContent = "Não respondeu: " + e.message; } };
+  $("#mSave").onclick = () => {
+    const url = $("#yU").value.trim().replace(/\/$/, "");
+    if (!/^https:\/\//.test(url)) return $("#fErr").textContent = "Cole o endereço que começa com https://";
+    saveRemote(g, "pay", { on: true, url, created: serverNow() }, "Pix ligado");
+  };
+}
+async function copyRules() {
+  try {
+    const t = (await (await fetch("./database.rules.json", { cache: "no-store" })).text()).split("ADMIN_UID").join(user.uid);
+    try { await navigator.clipboard.writeText(t); toast("Regras copiadas! Cole no Firebase → Realtime Database → Regras e toque em Publicar."); }
+    catch { modal(`<h3>Regras do banco</h3><p class="muted small">Selecione tudo e copie:</p><textarea style="height:50vh;font-size:11px">${esc(t)}</textarea><div class="btnrow"><button class="primary" id="mCancel">Fechar</button></div>`); $("#mCancel").onclick = () => $("#modal").classList.add("hide"); }
+  } catch (e) { toast("Erro: " + e.message); }
 }
 function pushForm(g) {
   modal(`<h3>📲 Notificação para todos · ${esc(S.games[g].name || g)}</h3>
