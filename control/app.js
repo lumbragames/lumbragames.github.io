@@ -778,10 +778,13 @@ function pCtrl() {
         <div class="cbox"><div class="ch"><b>💳 Pix (Mercado Pago)</b><span class="tag ${py?.on ? "t-real" : "t-na"}">${py?.on ? "Ligado" : "Desligado"}</span></div>
           <p class="muted small">${py?.on ? "Servidor: " + esc(py.url) : "Quando o servidor de pagamento estiver pronto, cole o endereço dele aqui para liberar a compra de Pranfixas e do Sócio Prancheta."}</p>
           <div class="btnrow"><button class="primary sm" data-pyf="${esc(g)}">${py?.on ? "Alterar" : "Ligar o Pix"}</button>${py?.on ? `<button class="ghost sm" data-off="${esc(g)}|pay">Desligar</button>` : ""}</div></div>
+        <div class="cbox"><div class="ch"><b>🛡️ Login com Google</b><span class="tag ${(r.google?.clientId && r.google.on !== false) ? "t-real" : "t-na"}">${(r.google?.clientId && r.google.on !== false) ? "Ligado" : "Desligado"}</span></div>
+          <p class="muted small">${(r.google?.clientId && r.google.on !== false) ? "Os jogadores podem entrar com o Google e salvar o progresso na nuvem." : "Cole aqui o \"ID do cliente da Web\" do Firebase (Authentication → Google) para liberar o botão Entrar com Google no jogo."}</p>
+          <div class="btnrow"><button class="primary sm" data-glf="${esc(g)}">${(r.google?.clientId && r.google.on !== false) ? "Alterar" : "Ligar"}</button>${(r.google?.clientId && r.google.on !== false) ? `<button class="ghost sm" data-off="${esc(g)}|google">Desligar</button>` : ""}</div></div>
         <div class="cbox"><div class="ch"><b>🎁 Evento com prêmios</b><span class="tag ${r.evp?.on ? (r.evp.to && serverNow() > r.evp.to ? "t-na" : r.evp.from && serverNow() < r.evp.from ? "t-none" : "t-real") : "t-na"}">${r.evp?.on ? (r.evp.to && serverNow() > r.evp.to ? "Terminou" : r.evp.from && serverNow() < r.evp.from ? "Agendado" : "No ar até " + when(r.evp.to)) : "Desligado"}</span></div>
           <p class="muted small">${r.evp?.on ? `<b>${esc(r.evp.name || "")}</b> · tema ${esc(EVT[r.evp.theme] || r.evp.theme)} · ${(r.evp.mis || []).length} missões${r.evp.shop !== false ? " · itens na loja" : ""}${r.evp.bonus?.daily > 1 ? " · bônus diário em dobro" : ""}` : "Escolha um tema (Natal, Carnaval, Copa…), as datas e as missões com prêmios. Aparece no jogo para todo mundo, sem precisar atualizar."}</p>
           <div class="btnrow"><button class="primary sm" data-evf="${esc(g)}">${r.evp?.on ? "Novo evento" : "Criar evento"}</button>${r.evp?.on ? `<button class="ghost sm" data-off="${esc(g)}|evp">Encerrar</button>` : ""}</div></div>
-        <div class="cbox"><div class="ch"><b>🛡️ Regras do banco</b><span class="tag t-est">Online 6.0</span></div>
+        <div class="cbox"><div class="ch"><b>🛡️ Regras do banco</b><span class="tag t-est">Versão 6.2</span></div>
           <p class="muted small">O ranking, o Desafio da Semana e a liga com amigos precisam das regras novas no Firebase. Copie aqui (já vão com o seu código de administrador) e cole em Firebase → Realtime Database → Regras → Publicar.</p>
           <div class="btnrow"><button class="primary sm" id="rulesCopy">Copiar regras novas</button></div></div>`; })() : ""}
       </div>
@@ -804,6 +807,7 @@ pCtrl.after = () => {
   document.querySelectorAll("[data-vf]").forEach(b => b.onclick = () => videoForm(b.dataset.vf));
   document.querySelectorAll("[data-adf]").forEach(b => b.onclick = () => adsForm(b.dataset.adf));
   document.querySelectorAll("[data-pyf]").forEach(b => b.onclick = () => payForm(b.dataset.pyf));
+  document.querySelectorAll("[data-glf]").forEach(b => b.onclick = () => gForm(b.dataset.glf));
   document.querySelectorAll("[data-evf]").forEach(b => b.onclick = () => evForm(b.dataset.evf));
   const rc = $("#rulesCopy"); if (rc) rc.onclick = copyRules;
   document.querySelectorAll("[data-off]").forEach(b => b.onclick = async () => {
@@ -870,6 +874,17 @@ function adsForm(g) {
     if (unit && !/^ca-app-pub-\d{10,20}\/\d{6,14}$/.test(unit)) return $("#fErr").textContent = "Esse não parece o código do bloco (formato ca-app-pub-…/…).";
     saveRemote(g, "ads", { on: true, unit, created: serverNow() }, "Anúncios ligados" + (unit ? ": " + unit : ""));
   };
+}
+function gForm(g) {
+  const cur = S.remote[g]?.google || {};
+  modal(`<h3>🛡️ Login com Google · ${esc(S.games[g].name || g)}</h3>
+    <label>ID do cliente da Web<input id="gC" value="${esc(cur.clientId || "")}" placeholder="123456789-abc...apps.googleusercontent.com"></label>
+    <p class="muted small">Firebase → Authentication → Método de login → Google → Configuração do SDK da Web → ID do cliente da Web.</p>
+    <p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="ghost" id="mCancel">Cancelar</button><button class="primary" id="mSave">Salvar e ligar</button></div>`);
+  $("#mCancel").onclick = () => $("#modal").classList.add("hide");
+  $("#mSave").onclick = () => { const c = $("#gC").value.trim(); if (!/\.apps\.googleusercontent\.com$/.test(c)) return $("#fErr").textContent = "O código termina com .apps.googleusercontent.com";
+    saveRemote(g, "google", { on: true, clientId: c, created: serverNow() }, "Login com Google ligado"); };
 }
 function payForm(g) {
   const cur = S.remote[g]?.pay || {};
