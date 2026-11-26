@@ -240,6 +240,12 @@
           },
           "$o": {
             ".validate": false
+          },
+          "cos": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "sp": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
           }
         }
       },
@@ -271,6 +277,9 @@
             },
             "$o": {
               ".validate": false
+            },
+            "cos": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
             }
           }
         }
@@ -337,6 +346,9 @@
               },
               "$o": {
                 ".validate": false
+              },
+              "cos": {
+                ".validate": "newData.isString() && newData.val().length <= 60"
               }
             }
           },
@@ -364,6 +376,86 @@
             "$o": {
               ".write": "auth != null && auth.provider === 'anonymous' && (data.exists() ? (data.child('f').val() === auth.uid || data.child('to').val() === auth.uid) : newData.child('f').val() === auth.uid)"
             }
+          },
+          "chat": {
+            ".indexOn": [
+              "t"
+            ],
+            "$id": {
+              ".write": "auth != null && auth.provider === 'anonymous' && !data.exists() && root.child('pr/lg/'+$c+'/mem/'+auth.uid).exists()",
+              ".validate": "newData.hasChildren(['u','n','m','t']) && newData.child('u').val() === auth.uid",
+              "u": {
+                ".validate": "newData.isString() && newData.val().length <= 40"
+              },
+              "n": {
+                ".validate": "newData.isString() && newData.val().length <= 20"
+              },
+              "m": {
+                ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200"
+              },
+              "t": {
+                ".validate": "newData.isNumber() && newData.val() <= now"
+              },
+              "$o": {
+                ".validate": false
+              }
+            }
+          }
+        }
+      },
+      "sea": {
+        "$m": {
+          ".indexOn": [
+            "sp"
+          ],
+          "$u": {
+            ".write": "auth != null && auth.provider === 'anonymous' && auth.uid === $u",
+            ".validate": "newData.hasChildren(['n','sp'])",
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 20"
+            },
+            "sp": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+            },
+            "cos": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "vip": {
+              ".validate": "newData.isBoolean()"
+            },
+            "t": {
+              ".validate": "newData.isNumber() && newData.val() <= now"
+            },
+            "$o": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "feed": {
+        ".indexOn": [
+          "t"
+        ],
+        "$id": {
+          ".write": "auth != null && auth.provider === 'anonymous' && !data.exists()",
+          ".validate": "newData.hasChildren(['n','x','t'])",
+          "n": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "cos": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "k": {
+            ".validate": "newData.isString() && newData.val().length <= 6"
+          },
+          "x": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() <= now"
+          },
+          "$o": {
+            ".validate": false
           }
         }
       }

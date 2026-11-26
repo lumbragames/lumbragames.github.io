@@ -778,6 +778,9 @@ function pCtrl() {
         <div class="cbox"><div class="ch"><b>💳 Pix (Mercado Pago)</b><span class="tag ${py?.on ? "t-real" : "t-na"}">${py?.on ? "Ligado" : "Desligado"}</span></div>
           <p class="muted small">${py?.on ? "Servidor: " + esc(py.url) : "Quando o servidor de pagamento estiver pronto, cole o endereço dele aqui para liberar a compra de Pranfixas e do Sócio Prancheta."}</p>
           <div class="btnrow"><button class="primary sm" data-pyf="${esc(g)}">${py?.on ? "Alterar" : "Ligar o Pix"}</button>${py?.on ? `<button class="ghost sm" data-off="${esc(g)}|pay">Desligar</button>` : ""}</div></div>
+        <div class="cbox"><div class="ch"><b>🎁 Evento com prêmios</b><span class="tag ${r.evp?.on ? (r.evp.to && serverNow() > r.evp.to ? "t-na" : r.evp.from && serverNow() < r.evp.from ? "t-none" : "t-real") : "t-na"}">${r.evp?.on ? (r.evp.to && serverNow() > r.evp.to ? "Terminou" : r.evp.from && serverNow() < r.evp.from ? "Agendado" : "No ar até " + when(r.evp.to)) : "Desligado"}</span></div>
+          <p class="muted small">${r.evp?.on ? `<b>${esc(r.evp.name || "")}</b> · tema ${esc(EVT[r.evp.theme] || r.evp.theme)} · ${(r.evp.mis || []).length} missões${r.evp.shop !== false ? " · itens na loja" : ""}${r.evp.bonus?.daily > 1 ? " · bônus diário em dobro" : ""}` : "Escolha um tema (Natal, Carnaval, Copa…), as datas e as missões com prêmios. Aparece no jogo para todo mundo, sem precisar atualizar."}</p>
+          <div class="btnrow"><button class="primary sm" data-evf="${esc(g)}">${r.evp?.on ? "Novo evento" : "Criar evento"}</button>${r.evp?.on ? `<button class="ghost sm" data-off="${esc(g)}|evp">Encerrar</button>` : ""}</div></div>
         <div class="cbox"><div class="ch"><b>🛡️ Regras do banco</b><span class="tag t-est">Online 6.0</span></div>
           <p class="muted small">O ranking, o Desafio da Semana e a liga com amigos precisam das regras novas no Firebase. Copie aqui (já vão com o seu código de administrador) e cole em Firebase → Realtime Database → Regras → Publicar.</p>
           <div class="btnrow"><button class="primary sm" id="rulesCopy">Copiar regras novas</button></div></div>`; })() : ""}
@@ -789,7 +792,7 @@ function pCtrl() {
 function histHtml(g) {
   const h = Object.values(S.rlog[g] || {}).sort((a, b) => b.at - a.at).slice(0, 8);
   if (!h.length) return "";
-  const T = { notice: "📣", event: "🔥", update: "⬆️", push: "📲", video: "🎬", ads: "💰", pay: "💳" };
+  const T = { notice: "📣", event: "🔥", update: "⬆️", push: "📲", video: "🎬", ads: "💰", pay: "💳", evp: "🎁" };
   return `<details class="hist"><summary>Histórico (${h.length})</summary>${h.map(x => `<div><small>${when(x.at)}</small><span>${T[x.type] || "•"} ${esc(x.what)}</span></div>`).join("")}</details>`;
 }
 pCtrl.after = () => {
@@ -801,11 +804,12 @@ pCtrl.after = () => {
   document.querySelectorAll("[data-vf]").forEach(b => b.onclick = () => videoForm(b.dataset.vf));
   document.querySelectorAll("[data-adf]").forEach(b => b.onclick = () => adsForm(b.dataset.adf));
   document.querySelectorAll("[data-pyf]").forEach(b => b.onclick = () => payForm(b.dataset.pyf));
+  document.querySelectorAll("[data-evf]").forEach(b => b.onclick = () => evForm(b.dataset.evf));
   const rc = $("#rulesCopy"); if (rc) rc.onclick = copyRules;
   document.querySelectorAll("[data-off]").forEach(b => b.onclick = async () => {
     const [g, k] = b.dataset.off.split("|");
     if (!confirm("Desligar agora? Os jogadores deixam de ver isso.")) return;
-    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada", push: "Notificação cancelada", video: "Vídeo da atualização retirado", ads: "Anúncios desligados", pay: "Pix desligado" }[k]);
+    await saveRemote(g, k, { ...(S.remote[g]?.[k] || {}), on: false }, { notice: "Aviso desligado", event: "Evento desligado", update: "Versão mínima desligada", push: "Notificação cancelada", video: "Vídeo da atualização retirado", ads: "Anúncios desligados", pay: "Pix desligado", evp: "Evento encerrado" }[k]);
   });
   loadCtrlStats();
 };
@@ -874,7 +878,7 @@ function payForm(g) {
     <p class="err" id="fErr"></p>
     <div class="btnrow"><button class="ghost" id="mCancel">Cancelar</button><button class="ghost" id="mTest">Testar</button><button class="primary" id="mSave">Salvar e ligar</button></div>`);
   $("#mCancel").onclick = () => $("#modal").classList.add("hide");
-  $("#mTest").onclick = async () => { const u = $("#yU").value.trim().replace(/\/$/, ""); try { const r = await fetch(u + "/ping"); const j = await r.json(); $("#fErr").textContent = j.ok ? (j.token ? "Servidor funcionando e com o token do Mercado Pago!" : "Servidor funcionando, mas FALTA o token do Mercado Pago (MP_TOKEN).") : "Resposta estranha do servidor."; } catch (e) { $("#fErr").textContent = "Não respondeu: " + e.message; } };
+  $("#mTest").onclick = async () => { const u = $("#yU").value.trim().replace(/\/$/, ""); try { const r = await fetch(u + "/ping"); const j = await r.json(); $("#fErr").textContent = j.ok ? (j.token ? (j.v >= 2 ? "Servidor funcionando e com o token do Mercado Pago!" : "Funcionando, mas é o código antigo: cole o código novo para vender os kits.") : "Servidor funcionando, mas FALTA o token do Mercado Pago (MP_TOKEN).") : "Resposta estranha do servidor."; } catch (e) { $("#fErr").textContent = "Não respondeu: " + e.message; } };
   $("#mSave").onclick = () => {
     const url = $("#yU").value.trim().replace(/\/$/, "");
     if (!/^https:\/\//.test(url)) return $("#fErr").textContent = "Cole o endereço que começa com https://";
@@ -887,6 +891,35 @@ async function copyRules() {
     try { await navigator.clipboard.writeText(t); toast("Regras copiadas! Cole no Firebase → Realtime Database → Regras e toque em Publicar."); }
     catch { modal(`<h3>Regras do banco</h3><p class="muted small">Selecione tudo e copie:</p><textarea style="height:50vh;font-size:11px">${esc(t)}</textarea><div class="btnrow"><button class="primary" id="mCancel">Fechar</button></div>`); $("#mCancel").onclick = () => $("#modal").classList.add("hide"); }
   } catch (e) { toast("Erro: " + e.message); }
+}
+const EVT = { natal: "Natal", ano: "Ano Novo", carnaval: "Carnaval", saojoao: "São João", copa: "Copa do Mundo", criancas: "Dia das Crianças", halloween: "Halloween", final: "Noite de Final", classico: "Clássico" };
+const EVTIT = { natal: "Bom Velhinho", ano: "Virada Campeã", carnaval: "Rei da Folia", saojoao: "Arraiá FC", copa: "Rumo ao Hexa", criancas: "Craque Mirim", halloween: "Assombração", final: "Decisivo", classico: "Dono do Clássico" };
+const EVMK = { vit: "Vencer jogos na carreira", jogos: "Jogar partidas na carreira", desafio: "Jogar o Desafio da Semana (tentativas)", dias: "Pegar o bônus diário (dias)", liga: "Vencer jogos na liga com amigos" };
+function evForm(g) {
+  const now = Date.now(); const items = (t) => [["", "Nenhum item"], ["evf_" + t, "Moldura " + EVT[t]], ["eve_" + t, "Emblema " + EVT[t]], ["evb_" + t, "Faixa " + EVT[t]], ["evt_" + t, "Título “" + EVTIT[t] + "”"]];
+  const row = (i, m = {}) => `<div class="evrow" data-i="${i}"><select class="mk">${Object.entries(EVMK).map(([k, t]) => `<option value="${k}" ${m.k === k ? "selected" : ""}>${t}</option>`).join("")}</select><input class="mn" type="number" min="1" max="500" value="${m.n || [3, 5, 3, 5, 3][i]}" title="Quantidade"><input class="mp" type="number" min="0" max="5000" value="${m.pf ?? [50, 80, 60, 70, 100][i]}" title="Pranfixas"><select class="mi"></select></div>`;
+  modal(`<h3>🎁 Evento com prêmios · ${esc(S.games[g].name || g)}</h3>
+    <label>Tema (molduras, emblemas e faixas já desenhados no jogo)<select id="eT">${Object.entries(EVT).map(([k, t]) => `<option value="${k}">${t}</option>`).join("")}</select></label>
+    <label>Nome do evento<input id="eN" maxlength="40" placeholder="Ex.: Natal Prancheta"></label>
+    <div class="grid2"><label>Começa<input id="eF" type="datetime-local" value="${toLocal(now)}"></label><label>Termina<input id="eE" type="datetime-local" value="${toLocal(now + 7 * DAY)}"></label></div>
+    <label class="chk"><input type="checkbox" id="eS" checked> Itens do tema à venda na loja durante o evento</label>
+    <label class="chk"><input type="checkbox" id="eB"> Bônus diário em dobro durante o evento</label>
+    <p class="muted small" style="margin-top:8px"><b>Missões</b> (o que fazer · quantidade · Pranfixas · item de prêmio). Deixe a quantidade 0 para tirar a missão.</p>
+    <div id="eM">${[0, 1, 2, 3, 4].map((i) => row(i, i < 3 ? { k: ["vit", "desafio", "dias"][i] } : { k: ["liga", "jogos"][i - 3] })).join("")}</div>
+    <label class="chk"><input type="checkbox" id="eP" checked> Mandar notificação para todos avisando que o evento começou</label>
+    <p class="err" id="fErr"></p>
+    <div class="btnrow"><button class="ghost" id="mCancel">Cancelar</button><button class="primary" id="mSave">Colocar no ar</button></div>`);
+  const fillItems = () => { const t = $("#eT").value; document.querySelectorAll("#eM .mi").forEach((sel, i) => { const cur = sel.value; sel.innerHTML = items(t).map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); sel.value = cur && cur.endsWith("_" + t) ? cur : ["", "eve_" + t, "", "evb_" + t, "evf_" + t][i]; }); if (!$("#eN").value || $("#eN").dataset.auto) { $("#eN").value = EVT[t] + " Prancheta"; $("#eN").dataset.auto = 1; } };
+  $("#eT").onchange = fillItems; $("#eN").oninput = () => delete $("#eN").dataset.auto; fillItems();
+  $("#mCancel").onclick = () => $("#modal").classList.add("hide");
+  $("#mSave").onclick = async () => {
+    const theme = $("#eT").value, name = $("#eN").value.trim() || EVT[theme], from = fromLocal($("#eF").value), to = fromLocal($("#eE").value);
+    if (!from || !to || to <= from) return $("#fErr").textContent = "Confira as datas: o fim precisa ser depois do começo.";
+    const mis = [...document.querySelectorAll("#eM .evrow")].map((r) => ({ k: r.querySelector(".mk").value, n: +r.querySelector(".mn").value || 0, pf: +r.querySelector(".mp").value || 0, it: r.querySelector(".mi").value || "" })).filter((m) => m.n > 0 && (m.pf > 0 || m.it));
+    const data = { on: true, id: theme + "_" + rid(), name, theme, from, to, shop: $("#eS").checked, bonus: { daily: $("#eB").checked ? 2 : 1 }, mis, created: serverNow() };
+    await saveRemote(g, "evp", data, "Evento: " + name);
+    if ($("#eP").checked) saveRemote(g, "push", { on: true, id: rid(), title: "🎁 " + name + " começou!", text: (mis.length ? "Missões com prêmios exclusivos" : "Itens exclusivos na loja") + " até " + new Date(to).toLocaleDateString("pt-BR") + ". Abra o Prancheta!", created: serverNow() }, "Notificação do evento");
+  };
 }
 function pushForm(g) {
   modal(`<h3>📲 Notificação para todos · ${esc(S.games[g].name || g)}</h3>
