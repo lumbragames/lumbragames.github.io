@@ -816,7 +816,7 @@ pCtrl.after = () => {
   document.querySelectorAll("[data-adf]").forEach(b => b.onclick = () => adsForm(b.dataset.adf));
   document.querySelectorAll("[data-pyf]").forEach(b => b.onclick = () => payForm(b.dataset.pyf));
   document.querySelectorAll("[data-glf]").forEach(b => b.onclick = () => gForm(b.dataset.glf));
-  document.querySelectorAll("[data-devon]").forEach(b => b.onclick = () => { const u = auth.currentUser?.uid; if (!u) return; saveRemote(b.dataset.devon, "dev", { on: true, uids: [u], created: serverNow() }, "Modo desenvolvedor ligado"); });
+  document.querySelectorAll("[data-devon]").forEach(b => b.onclick = () => { const u = auth.currentUser?.uid; if (!u) return; saveRemote(b.dataset.devon, "dev", { on: true, uids: [u], emails: auth.currentUser?.email ? [auth.currentUser.email] : [], created: serverNow() }, "Modo desenvolvedor ligado"); });
   document.querySelectorAll("[data-evf]").forEach(b => b.onclick = () => evForm(b.dataset.evf));
   const rc = $("#rulesCopy"); if (rc) rc.onclick = copyRules;
   document.querySelectorAll("[data-off]").forEach(b => b.onclick = async () => {
