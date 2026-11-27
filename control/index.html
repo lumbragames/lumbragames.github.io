@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="control.css?v=63">
+<link rel="stylesheet" href="control.css?v=64">
 </head>
 <body>
 
@@ -31,6 +31,8 @@
     <label>E-mail<input type="email" id="email" autocomplete="username" required></label>
     <label>Senha<input type="password" id="pass" autocomplete="current-password" required></label>
     <button type="submit" class="primary" id="loginBtn">Entrar</button>
+    <button type="button" class="ghost" id="gLoginBtn" style="margin-top:8px;width:100%">Entrar com Google</button>
+    <button type="button" class="ghost sm" id="resetBtn" style="margin-top:6px;width:100%">Esqueci a senha</button>
     <p class="err" id="loginErr"></p>
   </form>
 </div>
@@ -84,6 +86,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="config.js"></script>
-<script type="module" src="app.js?v=63"></script>
+<script type="module" src="app.js?v=64"></script>
 </body>
 </html>

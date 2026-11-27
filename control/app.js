@@ -1,6 +1,6 @@
 // Lumbra Control — painel administrativo da Lumbra Games
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDatabase, ref, get, set, update, remove, onValue, query, orderByChild, startAt, limitToLast, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const $ = s => document.querySelector(s);
@@ -65,6 +65,11 @@ else {
   });
 }
 
+$("#gLoginBtn").onclick = async () => { $("#loginErr").textContent = ""; const pv = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, pv); } catch (err) { if (/popup/.test(err.code || "")) { try { await signInWithRedirect(auth, pv); } catch (e2) { $("#loginErr").textContent = "Não deu (" + (e2.code || "") + ")."; } } else $("#loginErr").textContent = (err.code || "").includes("unauthorized-domain") ? "Autorize lumbragames.github.io no Firebase (Authentication → Configurações → Domínios autorizados)." : "Não deu para entrar com o Google (" + (err.code || "") + ")."; } };
+getRedirectResult(auth).catch(() => {});
+$("#resetBtn").onclick = async () => { const em = $("#email").value.trim(); if (!em) { $("#loginErr").textContent = "Escreva seu e-mail acima e toque de novo."; return; }
+  try { await sendPasswordResetEmail(auth, em); $("#loginErr").textContent = "Mandamos um link para " + em + " para criar uma senha nova (veja também o spam)."; } catch (err) { $("#loginErr").textContent = "Não deu (" + (err.code || "") + ")."; } };
 $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault(); $("#loginErr").textContent = ""; $("#loginBtn").disabled = true;
   try { await signInWithEmailAndPassword(auth, $("#email").value.trim(), $("#pass").value); }
