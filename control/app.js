@@ -783,6 +783,9 @@ function pCtrl() {
         <div class="cbox"><div class="ch"><b>💳 Pix (Mercado Pago)</b><span class="tag ${py?.on ? "t-real" : "t-na"}">${py?.on ? "Ligado" : "Desligado"}</span></div>
           <p class="muted small">${py?.on ? "Servidor: " + esc(py.url) : "Quando o servidor de pagamento estiver pronto, cole o endereço dele aqui para liberar a compra de Pranfixas e do Sócio Prancheta."}</p>
           <div class="btnrow"><button class="primary sm" data-pyf="${esc(g)}">${py?.on ? "Alterar" : "Ligar o Pix"}</button>${py?.on ? `<button class="ghost sm" data-off="${esc(g)}|pay">Desligar</button>` : ""}</div></div>
+        <div class="cbox"><div class="ch"><b>🛠️ Modo desenvolvedor</b><span class="tag ${r.dev?.on && (r.dev.uids || []).includes(auth.currentUser?.uid) ? "t-real" : "t-na"}">${r.dev?.on && (r.dev.uids || []).includes(auth.currentUser?.uid) ? "Ligado" : "Desligado"}</span></div>
+          <p class="muted small">Libera tudo no jogo só para a sua conta (todos os itens, Pranfixas infinitas, Sócio e painel DEV com dinheiro e atalhos). No jogo, entre com o mesmo Google do Lumbra Control.</p>
+          <div class="btnrow"><button class="primary sm" data-devon="${esc(g)}">${r.dev?.on ? "Ligar de novo" : "Ligar para minha conta"}</button>${r.dev?.on ? `<button class="ghost sm" data-off="${esc(g)}|dev">Desligar</button>` : ""}</div></div>
         <div class="cbox"><div class="ch"><b>🛡️ Login com Google</b><span class="tag ${(r.google?.clientId && r.google.on !== false) ? "t-real" : "t-na"}">${(r.google?.clientId && r.google.on !== false) ? "Ligado" : "Desligado"}</span></div>
           <p class="muted small">${(r.google?.clientId && r.google.on !== false) ? "Os jogadores podem entrar com o Google e salvar o progresso na nuvem." : "Cole aqui o \"ID do cliente da Web\" do Firebase (Authentication → Google) para liberar o botão Entrar com Google no jogo."}</p>
           <div class="btnrow"><button class="primary sm" data-glf="${esc(g)}">${(r.google?.clientId && r.google.on !== false) ? "Alterar" : "Ligar"}</button>${(r.google?.clientId && r.google.on !== false) ? `<button class="ghost sm" data-off="${esc(g)}|google">Desligar</button>` : ""}</div></div>
@@ -813,6 +816,7 @@ pCtrl.after = () => {
   document.querySelectorAll("[data-adf]").forEach(b => b.onclick = () => adsForm(b.dataset.adf));
   document.querySelectorAll("[data-pyf]").forEach(b => b.onclick = () => payForm(b.dataset.pyf));
   document.querySelectorAll("[data-glf]").forEach(b => b.onclick = () => gForm(b.dataset.glf));
+  document.querySelectorAll("[data-devon]").forEach(b => b.onclick = () => { const u = auth.currentUser?.uid; if (!u) return; saveRemote(b.dataset.devon, "dev", { on: true, uids: [u], created: serverNow() }, "Modo desenvolvedor ligado"); });
   document.querySelectorAll("[data-evf]").forEach(b => b.onclick = () => evForm(b.dataset.evf));
   const rc = $("#rulesCopy"); if (rc) rc.onclick = copyRules;
   document.querySelectorAll("[data-off]").forEach(b => b.onclick = async () => {
