@@ -792,7 +792,7 @@ function pCtrl() {
         <div class="cbox"><div class="ch"><b>🎁 Evento com prêmios</b><span class="tag ${r.evp?.on ? (r.evp.to && serverNow() > r.evp.to ? "t-na" : r.evp.from && serverNow() < r.evp.from ? "t-none" : "t-real") : "t-na"}">${r.evp?.on ? (r.evp.to && serverNow() > r.evp.to ? "Terminou" : r.evp.from && serverNow() < r.evp.from ? "Agendado" : "No ar até " + when(r.evp.to)) : "Desligado"}</span></div>
           <p class="muted small">${r.evp?.on ? `<b>${esc(r.evp.name || "")}</b> · tema ${esc(EVT[r.evp.theme] || r.evp.theme)} · ${(r.evp.mis || []).length} missões${r.evp.shop !== false ? " · itens na loja" : ""}${r.evp.bonus?.daily > 1 ? " · bônus diário em dobro" : ""}` : "Escolha um tema (Natal, Carnaval, Copa…), as datas e as missões com prêmios. Aparece no jogo para todo mundo, sem precisar atualizar."}</p>
           <div class="btnrow"><button class="primary sm" data-evf="${esc(g)}">${r.evp?.on ? "Novo evento" : "Criar evento"}</button>${r.evp?.on ? `<button class="ghost sm" data-off="${esc(g)}|evp">Encerrar</button>` : ""}</div></div>
-        <div class="cbox"><div class="ch"><b>🛡️ Regras do banco</b><span class="tag t-est">Versão 6.2</span></div>
+        <div class="cbox"><div class="ch"><b>🛡️ Regras do banco</b><span class="tag t-est">Versão 6.3</span></div>
           <p class="muted small">O ranking, o Desafio da Semana e a liga com amigos precisam das regras novas no Firebase. Copie aqui (já vão com o seu código de administrador) e cole em Firebase → Realtime Database → Regras → Publicar.</p>
           <div class="btnrow"><button class="primary sm" id="rulesCopy">Copiar regras novas</button></div></div>`; })() : ""}
       </div>

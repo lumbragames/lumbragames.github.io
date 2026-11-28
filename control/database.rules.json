@@ -20,7 +20,7 @@
     "players": {
       "$g": {
         "$u": {
-          ".write": "auth != null && auth.uid === $u && (auth.provider === 'anonymous' || auth.provider === 'google.com') && root.child('games').child($g).exists()",
+          ".write": "auth != null && auth.uid === $u && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && root.child('games').child($g).exists()",
           ".validate": "newData.hasChildren(['last'])",
           "first": {
             ".validate": "newData.isNumber() && (!data.exists() || data.val() === newData.val())"
@@ -74,7 +74,7 @@
           "l"
         ],
         "$s": {
-          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && root.child('games').child($g).exists() && (data.exists() ? data.child('u').val() === auth.uid : newData.child('u').val() === auth.uid)",
+          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && root.child('games').child($g).exists() && (data.exists() ? data.child('u').val() === auth.uid : newData.child('u').val() === auth.uid)",
           ".validate": "newData.hasChildren(['u', 's', 'l', 'd'])",
           "u": {
             ".validate": "newData.val() === auth.uid"
@@ -103,7 +103,7 @@
     "online": {
       "$g": {
         "$u": {
-          ".write": "auth != null && auth.uid === $u && (auth.provider === 'anonymous' || auth.provider === 'google.com') && root.child('games').child($g).exists()",
+          ".write": "auth != null && auth.uid === $u && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && root.child('games').child($g).exists()",
           ".validate": "newData.hasChildren(['sid', 'l'])",
           "sid": {
             ".validate": "newData.isString() && newData.val().length <= 20"
@@ -127,7 +127,7 @@
           "u"
         ],
         "$e": {
-          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && !data.exists() && root.child('games').child($g).exists()",
+          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && !data.exists() && root.child('games').child($g).exists()",
           ".validate": "newData.hasChildren(['u', 's', 'n', 't'])",
           "u": {
             ".validate": "newData.val() === auth.uid"
@@ -161,7 +161,7 @@
           "t"
         ],
         "$e": {
-          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && !data.exists() && root.child('games').child($g).exists()",
+          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && !data.exists() && root.child('games').child($g).exists()",
           ".validate": "newData.hasChildren(['u', 'w', 'm', 't'])",
           "u": {
             ".validate": "newData.val() === auth.uid"
@@ -191,7 +191,7 @@
           "sc"
         ],
         "$u": {
-          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && auth.uid === $u",
+          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && auth.uid === $u",
           ".validate": "newData.hasChildren(['n','sc'])",
           "n": {
             ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 20"
@@ -255,7 +255,7 @@
             "sc"
           ],
           "$u": {
-            ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && auth.uid === $u",
+            ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && auth.uid === $u",
             ".validate": "newData.hasChildren(['n','sc'])",
             "n": {
               ".validate": "newData.isString() && newData.val().length <= 20"
@@ -287,7 +287,7 @@
       "lg": {
         "$c": {
           "meta": {
-            ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && (!data.exists() ? newData.child('own').val() === auth.uid : data.child('own').val() === auth.uid)",
+            ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && (!data.exists() ? newData.child('own').val() === auth.uid : data.child('own').val() === auth.uid)",
             ".validate": "newData.hasChildren(['name','own','min','max','hr','st'])",
             "name": {
               ".validate": "newData.isString() && newData.val().length <= 30"
@@ -325,7 +325,7 @@
           },
           "mem": {
             "$u": {
-              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && auth.uid === $u && root.child('pr/lg/'+$c+'/meta').exists() && (data.exists() || root.child('pr/lg/'+$c+'/meta/st').val() === 'lobby')",
+              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && auth.uid === $u && root.child('pr/lg/'+$c+'/meta').exists() && (data.exists() || root.child('pr/lg/'+$c+'/meta/st').val() === 'lobby')",
               "n": {
                 ".validate": "newData.isString() && newData.val().length <= 20"
               },
@@ -354,27 +354,27 @@
           },
           "sq": {
             "$u": {
-              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && auth.uid === $u"
+              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && auth.uid === $u"
             }
           },
           "ln": {
             "$u": {
-              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && auth.uid === $u"
+              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && auth.uid === $u"
             }
           },
           "res": {
             "$r": {
-              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && !data.exists() && root.child('pr/lg/'+$c+'/mem/'+auth.uid).exists()"
+              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && !data.exists() && root.child('pr/lg/'+$c+'/mem/'+auth.uid).exists()"
             }
           },
           "fa": {
             "$i": {
-              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && !data.exists() && newData.val() === auth.uid"
+              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && !data.exists() && newData.val() === auth.uid"
             }
           },
           "of": {
             "$o": {
-              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && (data.exists() ? (data.child('f').val() === auth.uid || data.child('to').val() === auth.uid) : newData.child('f').val() === auth.uid)"
+              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && (data.exists() ? (data.child('f').val() === auth.uid || data.child('to').val() === auth.uid) : newData.child('f').val() === auth.uid)"
             }
           },
           "chat": {
@@ -382,7 +382,7 @@
               "t"
             ],
             "$id": {
-              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && !data.exists() && root.child('pr/lg/'+$c+'/mem/'+auth.uid).exists()",
+              ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && !data.exists() && root.child('pr/lg/'+$c+'/mem/'+auth.uid).exists()",
               ".validate": "newData.hasChildren(['u','n','m','t']) && newData.child('u').val() === auth.uid",
               "u": {
                 ".validate": "newData.isString() && newData.val().length <= 40"
@@ -409,7 +409,7 @@
             "sp"
           ],
           "$u": {
-            ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && auth.uid === $u",
+            ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && auth.uid === $u",
             ".validate": "newData.hasChildren(['n','sp'])",
             "n": {
               ".validate": "newData.isString() && newData.val().length <= 20"
@@ -437,7 +437,7 @@
           "t"
         ],
         "$id": {
-          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google.com') && !data.exists()",
+          ".write": "auth != null && (auth.provider === 'anonymous' || auth.provider === 'google' || auth.provider === 'google.com') && !data.exists()",
           ".validate": "newData.hasChildren(['n','x','t'])",
           "n": {
             ".validate": "newData.isString() && newData.val().length <= 20"
